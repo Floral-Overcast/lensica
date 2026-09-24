@@ -1,0 +1,7 @@
+# big binaries stay on Sata/Canvas, never in git (hashes live in manifests)
+source/
+target/master/*.png
+target/reference/*.png
+cuts/
+__pycache__/
+*.pyc
