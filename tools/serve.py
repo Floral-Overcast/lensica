@@ -7,11 +7,14 @@ devicePixelRatio), the viewer lazily generates that exact cut server-side
 On iPhone/iPad, Add to Home Screen and launch from the icon for true
 fullscreen (Safari's bars break the 1:1 check otherwise).
 """
+import io
+import json
 import os
 import re
 import sys
 import threading
 import urllib.parse
+import zipfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -23,6 +26,7 @@ import cut  # noqa: E402
 CACHE = os.path.join(ROOT, "cuts", "web")
 PORT = 8097
 LOCK = threading.Lock()
+ORDER = ["tone", "flat", "split", "organic", "spectrum", "skin", "edges", "points"]
 
 INDEX = """<!doctype html><html><head>
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -36,18 +40,50 @@ border-radius:8px;text-decoration:none;font-weight:600}
 code{color:#8cf}li{margin:6px 0;color:#aaa}</style></head><body>
 <h2>Lensica target viewer</h2>
 <p id="det">detecting display&hellip;</p>
-<p><a class="b" id="go">Show frames</a></p>
+<p><a class="b" id="go">Show frames</a>&nbsp; <a class="b" id="zip" style="background:#59d">Download zip</a>&nbsp;
+<a class="b" id="sv" style="background:#c94">Save to Photos</a></p>
 <ol>
-<li>iPhone/iPad: Share &rarr; Add to Home Screen, launch from the icon (fullscreen).</li>
-<li>Max brightness, auto-brightness OFF, True Tone / Night Shift OFF, rotation locked.</li>
-<li>Lights out. Tap anywhere to cycle the 8 frames.</li>
-<li>All 4 corner markers must be fully visible and the page must not scroll or zoom;
-otherwise the view is not 1:1 and the capture is invalid.</li>
+<li><b>Easiest on iPhone:</b> "Save to Photos" page, long-press each image &rarr; Save Image,
+then display them from the Photos app fullscreen (swipe = next frame). Photos shows an
+exact-native-res image 1:1, no Safari bars.</li>
+<li>"Show frames" = live viewer; on iPhone/iPad use Share &rarr; Add to Home Screen and
+launch from the icon, or Safari bars break 1:1.</li>
+<li>Zip = all 8 PNGs + manifest, for Mac / AirDrop.</li>
+<li>Max brightness, auto-brightness OFF, True Tone / Night Shift OFF, rotation locked, lights out.</li>
+<li>All 4 corner markers must be fully visible, no scroll, no zoom; otherwise not 1:1.</li>
 </ol>
 <script>
 var w=Math.round(screen.width*devicePixelRatio),h=Math.round(screen.height*devicePixelRatio);
 document.getElementById('det').innerHTML='detected <code>'+w+'&times;'+h+'</code> physical px @ '+devicePixelRatio+'x';
 document.getElementById('go').href='/view?w='+w+'&h='+h+'&dpr='+devicePixelRatio;
+document.getElementById('zip').href='/cut/'+w+'x'+h+'/all.zip';
+document.getElementById('sv').href='/save?w='+w+'&h='+h;
+</script></body></html>"""
+
+SAVE = """<!doctype html><html><head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lensica - save to Photos</title>
+<style>body{background:#111;color:#eee;font:16px -apple-system,system-ui,sans-serif;
+padding:16px;margin:auto;max-width:40em}
+img{width:100%;display:block;background:#000;border:1px solid #333;border-radius:4px}
+p.n{color:#aaa;margin:4px 0 18px}</style></head><body>
+<h3>Long-press each image &rarr; Save Image</h3>
+<p style="color:#aaa">Then open the Photos app, lights out, view fullscreen; swipe to change
+frames. Saved images are exact native resolution; Photos shows them 1:1.</p>
+<div id="list">generating&hellip;</div>
+<script>
+var q={};location.search.slice(1).split('&').forEach(function(kv){var p=kv.split('=');q[p[0]]=p[1];});
+var label=(+q.w)+'x'+(+q.h);
+var order=['tone','flat','split','organic','spectrum','skin','edges','points'];
+fetch('/cut/'+label+'/manifest.json').then(function(r){return r.json();}).then(function(man){
+  var files={};Object.keys(man.files).forEach(function(f){
+    order.forEach(function(o){if(f.indexOf(o+'-')===0)files[o]=f;});});
+  var d=document.getElementById('list');d.innerHTML='';
+  order.forEach(function(o,i){
+    var im=document.createElement('img');im.src='/cut/'+label+'/'+files[o];
+    var p=document.createElement('p');p.className='n';p.textContent=(i+1)+'. '+files[o];
+    d.appendChild(im);d.appendChild(p);});
+}).catch(function(e){document.getElementById('list').textContent='error: '+e;});
 </script></body></html>"""
 
 VIEW = """<!doctype html><html><head>
@@ -105,11 +141,15 @@ class Handler(BaseHTTPRequestHandler):
                 return self.html(INDEX)
             if p == "/view":
                 return self.html(VIEW)
+            if p == "/save":
+                return self.html(SAVE)
             if p.startswith("/cut/"):
                 parts = p.split("/")
                 if len(parts) != 4 or ".." in p:
                     raise ValueError(p)
                 outdir = ensure(parts[2])
+                if parts[3] == "all.zip":
+                    return self.zip(outdir, parts[2])
                 with open(os.path.join(outdir, os.path.basename(parts[3])), "rb") as f:
                     data = f.read()
                 is_json = parts[3].endswith(".json")
@@ -125,6 +165,24 @@ class Handler(BaseHTTPRequestHandler):
             self.send_error(404)
         except BrokenPipeError:
             pass
+
+    def zip(self, outdir, label):
+        with open(os.path.join(outdir, "manifest.json")) as f:
+            files = json.load(f)["files"]
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as z:
+            for i, o in enumerate(ORDER):
+                for fname in files:
+                    if fname.startswith(o + "-"):
+                        z.write(os.path.join(outdir, fname), f"{i+1:02d}-{fname}")
+            z.write(os.path.join(outdir, "manifest.json"), "manifest.json")
+        data = buf.getvalue()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/zip")
+        self.send_header("Content-Disposition", f'attachment; filename="lensica-{label}.zip"')
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
 
     def html(self, s):
         b = s.encode()
