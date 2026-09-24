@@ -33,9 +33,25 @@ NAMES = {v: k for k, v in generate.FRAME_IDS.items()}
 def load(path):
     if path.lower().endswith(".dng"):
         import rawpy
-        with rawpy.imread(path) as r:
-            rgb = r.postprocess(half_size=True, gamma=(1, 1), no_auto_bright=True,
-                                output_bps=16, use_camera_wb=True)
+
+        def post(p):
+            with rawpy.imread(p) as r:
+                return r.postprocess(half_size=True, gamma=(1, 1), no_auto_bright=True,
+                                     output_bps=16, use_camera_wb=True)
+        try:
+            rgb = post(path)
+        except Exception:
+            # LibRaw can't parse some Samsung lossless-JPEG DNG variants
+            # ("data corrupted at ..."); dnglab reads them fine, so convert
+            import subprocess
+            import tempfile
+            tmp = tempfile.mktemp(suffix=".dng")
+            try:
+                subprocess.run(["dnglab", "convert", path, tmp], check=True, capture_output=True)
+                rgb = post(tmp)
+            finally:
+                if os.path.exists(tmp):
+                    os.unlink(tmp)
         return rgb[:, :, ::-1].copy(), "raw"
     return cv2.imread(path, cv2.IMREAD_COLOR), "jpeg"
 
