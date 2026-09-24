@@ -14,6 +14,11 @@ Crowd-sourced lens/camera "look" measurement library + look-recreation filters. 
 - `python3 analysis/score_windows.py` (one-time, ~5 min, needs ~4GB RAM)
 - `python3 target/generators/generate.py all --res 4096x4096 --out target/reference`
 - `python3 tools/cut.py --display macbook-pro-14 --out cuts/`
+- Viewer: **http://10.2.1.5:8097** on the display device itself (`lensica-serve.service`
+  on cloud, `tools/serve.py`). Auto-detects native res, generates + caches the cut
+  under `cuts/web/`, tap cycles frames. iOS: Add to Home Screen for fullscreen.
+- `python3 extract/selftest.py` (pipeline smoke test, must PASS)
+- Deps: Pillow, numpy, opencv-python-headless (installed on cloud via pip --break-system-packages)
 
 ## Iron rules (the whole product depends on these)
 - **Pixel-exact or invalid.** A target frame is only a valid stimulus displayed 1:1, native resolution, no OS scaling. Never ship a "fullscreen and let it scale" flow.
