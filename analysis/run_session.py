@@ -47,7 +47,8 @@ def load(path):
             import tempfile
             tmp = tempfile.mktemp(suffix=".dng")
             try:
-                subprocess.run(["dnglab", "convert", path, tmp], check=True, capture_output=True)
+                subprocess.run(["dnglab", "convert", "-c", "uncompressed", path, tmp],
+                               check=True, capture_output=True)
                 rgb = post(tmp)
             finally:
                 if os.path.exists(tmp):
