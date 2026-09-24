@@ -27,6 +27,7 @@ Crowd-sourced lens/camera "look" measurement library + look-recreation filters. 
 - Repo is seol-owned on Canvas; after root edits `chown -R seol:seol .`; push manually at milestones (no autopush on cloud).
 
 ## Known gaps / context
+- **The master square is not shippable as-is.** done.png is a collage containing recognizable copyrighted artwork (manga covers, product/packaging shots, posters). Statistically excellent, legally fine as OUR internal baseline target, NOT distributable to users as the public Target v1 organic frame. Before public launch: replace with original/licensed art or a procedurally generated frame with matched statistics (the scorer defines "matched").
 - done.png weaknesses (measured 2026-09-24): yellow-green hue hole (~6% of saturated px in 60-180°), ~2% black-clip + ~4-5% white-clip per channel. The synthetic spectrum/skin/tone frames exist to plug exactly these; clipped regions get masked at fit time.
 - Display metamerism: RGB stimulus can't recover full spectral response; profiles are display-referred by design. Tag confidence accordingly.
 - Screen-photo gotchas the future protocol must handle: moire (slight defocus ok for color frames), OLED PWM (shutter >= 1/30), RAW-only + locked WB on capture.

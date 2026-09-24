@@ -1,0 +1,19 @@
+{
+  "target_version": "v1",
+  "frame": "master-square",
+  "side_px": 6144,
+  "source_file": "source/done.png",
+  "source_sha256": "a5b7ad235461a4f9802a6458656d8ceb457d7e8ce02ea6d926cf52b42fc2d5a6",
+  "crop_origin_xy": [
+    8192,
+    512
+  ],
+  "full_res_stats": {
+    "coverage": 0.79669189453125,
+    "clip": 0.09110111660427517,
+    "luma_std": 67.28225465630332,
+    "score": 0.8177330039755482
+  },
+  "master_sha256": "12f2288516dc9bd6b7618f98fa216758b4715fc524341ba0e67476bb7c399d63",
+  "note": "colorspace sRGB 8-bit; display 1:1 only, never scaled"
+}
