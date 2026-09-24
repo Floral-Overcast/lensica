@@ -11,8 +11,14 @@ Frames:
   tone      smooth luma/R/G/B ramps + 21-step grays + broadcast-level blocks
   points    point lights on black (PSF/bokeh/flare; white grid + RGB triads + flare disk)
   edges     5-degree slanted squares (MTF/CA) + 1px distortion grid on mid-gray
+  flat      uniform 50% gray (vignetting + display uniformity)
 
-usage: generate.py {spectrum|skin|tone|points|edges|all} [--res 4096x4096]
+Every frame gets 4 corner ArUco fiducials (DICT_4X4_50, id = frame_id*4+corner,
+corners ordered TL,TR,BR,BL) so extraction can warp captures back into stimulus
+pixel space. fiducial_geometry() is the single source of truth for their
+stimulus coordinates; extract/register.py imports it.
+
+usage: generate.py {spectrum|skin|tone|points|edges|flat|all} [--res 4096x4096]
                    [--out target/reference] [--pages]
 """
 import argparse
@@ -23,6 +29,36 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 VERSION = "v1"
+
+FRAME_IDS = {"organic": 0, "spectrum": 1, "skin": 2, "tone": 3, "points": 4, "edges": 5, "flat": 6}
+
+
+def fiducial_geometry(w, h):
+    """Marker corner coords in stimulus space: {corner_key: 4x(x,y) TL,TR,BR,BL}.
+    corner_key 0=TL 1=TR 2=BR 3=BL of the frame."""
+    s = max(80, min(w, h) // 14)
+    q = s // 4
+    p = s + 2 * q
+    pads = {0: (0, 0), 1: (w - p, 0), 2: (w - p, h - p), 3: (0, h - p)}
+    geo = {}
+    for k, (px, py) in pads.items():
+        x, y = px + q, py + q
+        geo[k] = [(x, y), (x + s, y), (x + s, y + s), (x, y + s)]
+    return geo, s, q
+
+
+def add_fiducials(img, frame_name):
+    import cv2
+    w, h = img.size
+    geo, s, q = fiducial_geometry(w, h)
+    d = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+    base = FRAME_IDS[frame_name] * 4
+    for k, pts in geo.items():
+        m = cv2.aruco.generateImageMarker(d, base + k, s)
+        pad = np.full((s + 2 * q, s + 2 * q), 255, np.uint8)
+        pad[q : q + s, q : q + s] = m
+        img.paste(Image.fromarray(pad).convert("RGB"), (pts[0][0] - q, pts[0][1] - q))
+    return img
 
 
 def save(img, out, name, w, h):
@@ -167,7 +203,11 @@ def edges(w, h):
     return img
 
 
-FRAMES = {"spectrum": spectrum, "skin": skin, "tone": tone, "points": points, "edges": edges}
+def flat(w, h):
+    return Image.new("RGB", (w, h), (128, 128, 128))
+
+
+FRAMES = {"spectrum": spectrum, "skin": skin, "tone": tone, "points": points, "edges": edges, "flat": flat}
 
 
 def main():
@@ -181,9 +221,10 @@ def main():
     names = list(FRAMES) if a.frame == "all" else [a.frame]
     for n in names:
         if n == "spectrum" and a.pages:
-            spectrum_pages(w, h, a.out)
+            for p in spectrum_pages(w, h, a.out):
+                add_fiducials(Image.open(p), "spectrum").save(p)
         else:
-            save(FRAMES[n](w, h), a.out, n, w, h)
+            save(add_fiducials(FRAMES[n](w, h), n), a.out, n, w, h)
 
 
 if __name__ == "__main__":

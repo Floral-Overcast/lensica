@@ -66,12 +66,12 @@ def main():
 
     x0, y0 = (m.width - w) // 2, (m.height - h) // 2
     organic = os.path.join(outdir, f"organic-{w}x{h}-v1.png")
-    m.crop((x0, y0, x0 + w, y0 + h)).save(organic)
+    generate.add_fiducials(m.crop((x0, y0, x0 + w, y0 + h)), "organic").save(organic)
     print(f"{organic} (master center-crop at {x0},{y0})")
 
     files = {os.path.basename(organic): sha256(organic)}
     for name, fn in generate.FRAMES.items():
-        path = generate.save(fn(w, h), outdir, name, w, h)
+        path = generate.save(generate.add_fiducials(fn(w, h), name), outdir, name, w, h)
         files[os.path.basename(path)] = sha256(path)
 
     manifest = {
