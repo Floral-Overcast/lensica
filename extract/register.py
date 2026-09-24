@@ -17,13 +17,34 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "target", "gene
 import generate  # noqa: E402
 
 
+def detect_multiscale(gray):
+    """ArUco detection robust to high-res handheld captures: at native
+    resolution the default adaptive-threshold windows are smaller than the
+    blur radius, so also try downscaled copies (and a tuned parameter set)
+    and rescale corners back. Returns (corners, ids), best attempt."""
+    d = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+    tuned = cv2.aruco.DetectorParameters()
+    tuned.adaptiveThreshWinSizeMax = 45
+    tuned.adaptiveThreshWinSizeStep = 6
+    tuned.minMarkerPerimeterRate = 0.005
+    tuned.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
+    best = ([], None)
+    for scale in (1.0, 0.5, 0.25):
+        im = gray if scale == 1.0 else cv2.resize(gray, None, fx=scale, fy=scale)
+        for params in (cv2.aruco.DetectorParameters(), tuned):
+            corners, ids, _ = cv2.aruco.ArucoDetector(d, params).detectMarkers(im)
+            if ids is not None and len(ids) > len(best[0]):
+                best = ([c / scale for c in corners], ids)
+                if len(ids) >= 4:
+                    return best
+    return best
+
+
 def register(img, frame, w, h, min_markers=3):
     """img: BGR array any depth. Returns (warped stimulus-space image, n_markers)."""
     img8 = img if img.dtype == np.uint8 else (img.astype(np.float32) / 257.0).astype(np.uint8)
     gray = cv2.cvtColor(img8, cv2.COLOR_BGR2GRAY)
-    d = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
-    det = cv2.aruco.ArucoDetector(d, cv2.aruco.DetectorParameters())
-    corners, ids, _ = det.detectMarkers(gray)
+    corners, ids = detect_multiscale(gray)
     if ids is None:
         raise RuntimeError("no fiducials found (too dark, too blurred, or markers cropped out)")
     geo, _, _ = generate.fiducial_geometry(w, h)
