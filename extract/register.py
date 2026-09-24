@@ -41,6 +41,27 @@ def register(img, frame, w, h, min_markers=3):
     return cv2.warpPerspective(img, H, (w, h)), n
 
 
+def anchors(warped, w, h):
+    """Per-corner white/black references from the fiducials themselves:
+    white = median of the quiet-zone ring (stimulus 255), black = 10th
+    percentile inside the marker (stimulus 0). Lets any frame be normalized
+    against display brightness / exposure without trusting absolute levels."""
+    geo, s, q = generate.fiducial_geometry(w, h)
+    out = {}
+    for k, pts in geo.items():
+        x, y = pts[0]
+        pad = warped[y - q : y + s + q, x - q : x + s + q].reshape(-1, warped.shape[2] if warped.ndim == 3 else 1)
+        marker = warped[y : y + s, x : x + s].reshape(-1, warped.shape[2] if warped.ndim == 3 else 1)
+        ring_mask = np.ones((s + 2 * q, s + 2 * q), bool)
+        ring_mask[q : q + s, q : q + s] = False
+        ring = warped[y - q : y + s + q, x - q : x + s + q][ring_mask]
+        out[str(k)] = {
+            "white": np.median(ring.reshape(-1, ring.shape[-1] if ring.ndim > 1 else 1), axis=0).tolist(),
+            "black": np.percentile(marker, 10, axis=0).tolist(),
+        }
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("capture")
@@ -55,7 +76,11 @@ def main():
     warped, n = register(img, a.frame, w, h)
     out = a.out or a.capture.rsplit(".", 1)[0] + ".reg.png"
     cv2.imwrite(out, warped)
-    print(f"{out}  ({n}/4 fiducials)")
+    import json
+    apath = out.rsplit(".", 1)[0] + ".anchors.json"
+    with open(apath, "w") as f:
+        json.dump({"fiducials_found": n, "corners_bgr": anchors(warped, w, h)}, f, indent=2)
+    print(f"{out}  ({n}/4 fiducials)  + {os.path.basename(apath)}")
 
 
 if __name__ == "__main__":

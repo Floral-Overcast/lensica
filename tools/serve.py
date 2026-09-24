@@ -40,7 +40,7 @@ code{color:#8cf}li{margin:6px 0;color:#aaa}</style></head><body>
 <ol>
 <li>iPhone/iPad: Share &rarr; Add to Home Screen, launch from the icon (fullscreen).</li>
 <li>Max brightness, auto-brightness OFF, True Tone / Night Shift OFF, rotation locked.</li>
-<li>Lights out. Tap anywhere to cycle the 7 frames.</li>
+<li>Lights out. Tap anywhere to cycle the 8 frames.</li>
 <li>All 4 corner markers must be fully visible and the page must not scroll or zoom;
 otherwise the view is not 1:1 and the capture is invalid.</li>
 </ol>
@@ -64,7 +64,7 @@ font:14px -apple-system,system-ui,sans-serif;transition:opacity .4s;pointer-even
 var q={};location.search.slice(1).split('&').forEach(function(kv){var p=kv.split('=');q[p[0]]=decodeURIComponent(p[1]||'');});
 var w=+q.w,h=+q.h,dpr=+q.dpr||window.devicePixelRatio||1;
 var label=w+'x'+h;
-var order=['tone','flat','organic','spectrum','skin','edges','points'];
+var order=['tone','flat','split','organic','spectrum','skin','edges','points'];
 var img=document.getElementById('f'),tag=document.getElementById('tag');
 img.style.width=(w/dpr)+'px';img.style.height=(h/dpr)+'px';
 tag.textContent='generating '+label+' \\u2026 (first visit takes a few seconds)';

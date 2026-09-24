@@ -42,13 +42,21 @@ display, and the display + sensor cancel out of the lens comparison.
 |---|-------|----------|-------|-------|
 | 1 | tone | f/5.6-f/8 | screen | sets session exposure |
 | 2 | flat | same | screen | vignetting + display uniformity |
-| 3 | organic | same | screen | the big one; 2nd shot at +1EV optional |
-| 4 | spectrum | same | screen | |
-| 5 | skin | same | screen | |
-| 6 | edges | same | screen | sharpest focus, no defocus allowed |
-| 7 | points | wide open | screen | in-focus PSF |
-| 8 | points | wide open | racked to MFD | bokeh balls (defocused) |
-| 9 | points | 2 stops down | racked to MFD | aperture-shape bokeh |
+| 3 | split | same | screen | veiling glare: white half's spill into black half |
+| 4 | organic | same | screen | the big one; 2nd shot at +1EV optional |
+| 5 | spectrum | same | screen | |
+| 6 | skin | same | screen | |
+| 7 | edges | same | screen | sharpest focus, no defocus allowed |
+| 8 | points | wide open | screen | in-focus PSF |
+| 9 | points | wide open | racked to MFD | bokeh balls (defocused) |
+| 10 | points | 2 stops down | racked to MFD | aperture-shape bokeh |
+
+Brightness anchoring: every frame's corner fiducials ARE a white (quiet zone,
+stimulus 255) + black (marker modules, stimulus 0) reference, and register.py
+writes them out as `.anchors.json`. So display brightness and exposure
+differences normalize out per frame. Keep exposure fixed WITHIN a session
+anyway; the anchors are the safety net and the cross-session normalizer, not
+an excuse to ride the dials.
 
 Then swap lens, same tripod position (re-frame as needed), repeat 1-9.
 Darkness check: one exposure with the display showing pure black; anything

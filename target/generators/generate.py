@@ -30,7 +30,7 @@ from PIL import Image, ImageDraw
 
 VERSION = "v1"
 
-FRAME_IDS = {"organic": 0, "spectrum": 1, "skin": 2, "tone": 3, "points": 4, "edges": 5, "flat": 6}
+FRAME_IDS = {"organic": 0, "spectrum": 1, "skin": 2, "tone": 3, "points": 4, "edges": 5, "flat": 6, "split": 7}
 
 
 def fiducial_geometry(w, h):
@@ -207,7 +207,16 @@ def flat(w, h):
     return Image.new("RGB", (w, h), (128, 128, 128))
 
 
-FRAMES = {"spectrum": spectrum, "skin": skin, "tone": tone, "points": points, "edges": edges, "flat": flat}
+def split(w, h):
+    """Left half 255 white, right half 0 black: veiling-glare / flare-contrast
+    frame. The white half's spill into the black half measures the lens's
+    global contrast character."""
+    img = Image.new("RGB", (w, h), (0, 0, 0))
+    ImageDraw.Draw(img).rectangle([0, 0, w // 2 - 1, h - 1], fill=(255, 255, 255))
+    return img
+
+
+FRAMES = {"spectrum": spectrum, "skin": skin, "tone": tone, "points": points, "edges": edges, "flat": flat, "split": split}
 
 
 def main():
