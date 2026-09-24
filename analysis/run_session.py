@@ -52,9 +52,19 @@ def det8(img):
     return (np.clip(g / top, 0, 1) ** 0.45 * 255).astype(np.uint8)
 
 
-def detect(img8):
-    corners, ids = reg.detect_multiscale(img8)
-    return corners, (ids.ravel() if ids is not None else np.array([], int))
+def detect(img):
+    """Plain grayscale first (right for jpeg/display-referred), then the
+    normalized+gamma copy (needed for dark linear raw). Keep the better."""
+    plain = cv2.cvtColor(img if img.dtype == np.uint8 else (img / 257).astype(np.uint8),
+                         cv2.COLOR_BGR2GRAY)
+    best = ([], np.array([], int))
+    for g in (plain, det8(img)):
+        corners, ids = reg.detect_multiscale(g)
+        if ids is not None and len(ids) > len(best[1]):
+            best = (corners, ids.ravel())
+        if len(best[1]) >= 4:
+            break
+    return best
 
 
 def main():
@@ -82,7 +92,7 @@ def main():
         if img is None:
             rows.append((name, klass, "-", 0, "unreadable"))
             continue
-        corners, ids = detect(det8(img))
+        corners, ids = detect(img)
         fids = [int(i) // 4 for i in ids if int(i) < len(NAMES) * 4]
         if not fids:
             rows.append((name, klass, "-", 0, "no fiducials"))

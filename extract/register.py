@@ -29,7 +29,7 @@ def detect_multiscale(gray):
     tuned.minMarkerPerimeterRate = 0.005
     tuned.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
     best = ([], None)
-    for scale in (1.0, 0.5, 0.25):
+    for scale in (1.0, 0.5, 0.25, 0.125):
         im = gray if scale == 1.0 else cv2.resize(gray, None, fx=scale, fy=scale)
         for params in (cv2.aruco.DetectorParameters(), tuned):
             corners, ids, _ = cv2.aruco.ArucoDetector(d, params).detectMarkers(im)
