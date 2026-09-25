@@ -13,7 +13,7 @@ display, and the display + sensor cancel out of the lens comparison.
   status lights), wear dark clothes (you reflect)
 
 ## Display prep (do once, don't touch again mid-session)
-1. macOS: True Tone OFF, Night Shift OFF, auto-brightness OFF.
+1. True Tone OFF, Night Shift OFF, auto-brightness OFF (macOS, iOS, and\n   iPadOS alike). Measured, not theoretical: True Tone on an iPad Air M2\n   shifted the display white ~6% redder / ~6.5% less blue at a Sony\n   sensor, and it drifts with ambient light, so it silently breaks\n   cross-session comparability.
 2. Brightness to a fixed notch, roughly 2/3. Note the notch. Never change it mid-session.
 3. Generate the cut for the display: `python3 tools/cut.py --display <model> --out cuts/`
 4. Show each frame at exactly 1:1 native pixels, fullscreen, no UI. Preview.app:
