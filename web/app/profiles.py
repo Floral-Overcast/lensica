@@ -26,6 +26,9 @@ PROFILE_DIRS = [
     "/Sata/temp/A7cii2/processed",
     "/Sata/temp/new sets/processed",
     "/Sata/temp/xperia/processed",
+    "/Sata/temp/s25u-ipad/processed",
+    "/Sata/temp/Iphone 5s/processed",
+    "/Sata/temp/cybershot DSC-T7/processed",
 ]
 STIMULUS = (1640, 2360)
 
