@@ -58,6 +58,14 @@ differences normalize out per frame. Keep exposure fixed WITHIN a session
 anyway; the anchors are the safety net and the cross-session normalizer, not
 an excuse to ride the dials.
 
+Focusing on the points frame: AF hunts on a black field with sparse dots,
+especially on phones. Do NOT add room light for it (that contaminates PSF
+tails and glare). Acquire focus on the previous bright frame (flat/edges),
+then lock it (iPhone/Samsung: long-press AE/AF lock; or pro-mode manual
+focus) and cycle to points without refocusing; the display distance is
+unchanged, so the lock is exact. A dim light BEHIND the camera, aimed away,
+is a last resort for framing only; kill it before the exposure.
+
 Then swap lens, same tripod position (re-frame as needed), repeat 1-9.
 Darkness check: one exposure with the display showing pure black; anything
 visible in it is light leak, fix the room.
