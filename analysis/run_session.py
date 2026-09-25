@@ -39,29 +39,15 @@ def load(path):
                 return r.postprocess(half_size=True, gamma=(1, 1), no_auto_bright=True,
                                      output_bps=16, use_camera_wb=True)
         import subprocess
-        import tempfile
         try:
             rgb = post(path)
             return rgb[:, :, ::-1].copy(), "raw"
         except Exception:
             pass
-        # LibRaw rejects some Samsung DNGs; sometimes dnglab can read them,
-        # but on a truly corrupt raw stream it emits a near-uniform garbage
-        # field, so validate before trusting it
-        tmp = tempfile.mktemp(suffix=".dng")
-        try:
-            subprocess.run(["dnglab", "convert", "-c", "uncompressed", path, tmp],
-                           check=True, capture_output=True)
-            rgb = post(tmp)
-            if rgb.std() > 1:
-                return rgb[:, :, ::-1].copy(), "raw"
-        except Exception:
-            pass
-        finally:
-            if os.path.exists(tmp):
-                os.unlink(tmp)
-        # raw stream is dead: salvage the embedded full-res camera JPEG,
-        # which is real jpeg-class data (Samsung writes it separately)
+        # Samsung's camera app sometimes corrupts the DNG raw stream in-camera
+        # (LibRaw: "data corrupted at ..."). dnglab "decodes" those to plausible
+        # garbage, so don't try — salvage the embedded full-res camera JPEG,
+        # which Samsung writes separately and survives intact (jpeg class)
         out = subprocess.run(["exiftool", "-b", "-JpgFromRaw", path], capture_output=True)
         if len(out.stdout) > 10000:
             arr = cv2.imdecode(np.frombuffer(out.stdout, np.uint8), cv2.IMREAD_COLOR)
