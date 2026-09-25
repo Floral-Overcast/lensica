@@ -1,6 +1,16 @@
 # Lensica
 
-Crowd-sourced lens/camera "look" measurement library + look-recreation filters. Crinacle's IEM database, but for lenses: users photograph a standardized on-screen target suite (tripod, dark room, Apple display), we extract measurements only (LUTs, maps, PSF kernels), never store their photos. This repo = **Target v1**, the test-image suite + tooling. Website/Android app come later.
+Crowd-sourced lens/camera "look" measurement library + look-recreation filters. Crinacle's IEM database, but for lenses: users photograph a standardized on-screen target suite (tripod, dark room, Apple display), we extract measurements (LUTs, maps, PSF kernels) into an evolving database. This repo = **Target v1** (test-image suite + tooling), the extraction pipeline, and the web MVP.
+
+**Where dev happens (web/)**: active web-UI work runs in worker CT `lensica` (CT228 @ 10.2.1.228 on Seolla), which pushes to `main`. The cloud Canvas checkout stays canonical for target/extract/analysis pipeline work; don't build web features from the cloud checkout while the CT is active. Pull before pipeline edits.
+
+## Product decisions (Matthew, 2026-09-25)
+- **Name: Lensica only.** (Korean root 설/Seol lives on in the "Seolette" curve.) Web MVP at **lensica.floralovercast.com**. No seol.* subdomain.
+- **Theme is a toggle, one brand:** `op-glass` = light mode, `flora-glass` = dark mode (both originated in the pioneer repo `src/styles.css` [data-theme] blocks; base token families in `~/design/families/{op,flora}` on every CT). Dark = default (Matthew: dark bg white text, de-emphasize via hue, WCAG non-negotiable).
+- **Test-chart photos ARE stored** (policy changed from "never store"): archived originals let every methodology/extraction improvement re-process the whole library instead of asking users to re-shoot. Storage is cheap (TBs available); off-site migration is a someday-problem. The moat framing stays "measurements + network effects", not image hoarding. Uploads must be validated as actual image files (decode-or-reject, size caps, never executed, stored outside webroot).
+- **Try-a-look uploads are the exception:** users can upload a personal photo to preview a profile/LUT on it; those are processed and discarded (session-only). Source camera matters: read EXIF (Model/LensModel) — if the source rig is profiled, apply true A→B mapping; else assume neutral sRGB and label the result "approximate — profile your camera for accuracy".
+- **Public target set excludes the organic frame** until a procedural/licensed replacement exists (done.png is copyrighted collage; see Known gaps).
+- The user-facing flow: step-by-step test wizard → QR code opens the target viewer on the display device → upload session → instant per-shot verdicts (frame ID, markers found, reshoot hints) → profile page (report.py-style charts) → library/compare + look-transfer demo.
 
 ## Layout
 - `source/` (gitignored) — `done.png`, Matthew's 17670x32080 master noise image. THE origin artifact, do not modify; sha256 in `target/master/master-square-v1.json`.
