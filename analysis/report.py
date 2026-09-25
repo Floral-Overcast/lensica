@@ -23,6 +23,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "extract"))
 import mtf  # noqa: E402
+import rignames  # noqa: E402
 
 # palette (dark mode steps, validated set)
 SURFACE, PAGE = "#1a1a19", "#0d0d0d"
@@ -51,9 +52,8 @@ def collect(dirs):
             frame = base.split("-")[0]
             klass = "raw" if "-raw-" in base else "jpeg"
             meta = json.load(open(mp))
-            lens = meta.get("LensModel") or meta.get("Model") or "?"
-            rows.append({"group": lens.strip(), "klass": klass, "frame": frame,
-                         "stem": stem, "meta": meta})
+            rows.append({"group": rignames.from_meta(meta) or "?", "klass": klass,
+                         "frame": frame, "stem": stem, "meta": meta})
     return rows
 
 
