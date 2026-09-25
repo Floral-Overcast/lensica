@@ -13,6 +13,7 @@ import argparse
 import glob
 import json
 import os
+import subprocess
 import sys
 import time
 
@@ -31,14 +32,14 @@ NAMES = {v: k for k, v in generate.FRAME_IDS.items()}
 
 
 def load(path):
-    if path.lower().endswith(".dng"):
+    ext = path.lower().rsplit(".", 1)[-1]
+    if ext in ("dng", "arw"):
         import rawpy
 
         def post(p):
             with rawpy.imread(p) as r:
                 return r.postprocess(half_size=True, gamma=(1, 1), no_auto_bright=True,
                                      output_bps=16, use_camera_wb=True)
-        import subprocess
         try:
             rgb = post(path)
             return rgb[:, :, ::-1].copy(), "raw"
@@ -58,6 +59,12 @@ def load(path):
                     return arr, "jpeg-preview"
         raise RuntimeError("raw stream corrupt, no usable embedded preview")
     return cv2.imread(path, cv2.IMREAD_COLOR), "jpeg"
+
+
+def exif_meta(path):
+    r = subprocess.run(["exiftool", "-S", "-Model", "-LensModel", "-FNumber",
+                        "-ExposureTime", "-ISO", path], capture_output=True, text=True)
+    return dict(l.split(": ", 1) for l in r.stdout.splitlines() if ": " in l)
 
 
 def to_float255(img):
@@ -91,6 +98,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("folder")
     ap.add_argument("--size", default="640x1136")
+    ap.add_argument("--glob", default="*", help="filename filter, e.g. '20260924_21*'")
     a = ap.parse_args()
     W, H = map(int, a.size.lower().split("x"))
     geo, s, q = generate.fiducial_geometry(W, H)
@@ -98,8 +106,8 @@ def main():
     outdir = os.path.join(a.folder, "processed")
     os.makedirs(outdir, exist_ok=True)
     rows = []
-    for path in sorted(glob.glob(os.path.join(a.folder, "*"))):
-        if not path.lower().endswith((".jpg", ".jpeg", ".dng", ".png", ".tif", ".tiff")):
+    for path in sorted(glob.glob(os.path.join(a.folder, a.glob))):
+        if not path.lower().endswith((".jpg", ".jpeg", ".dng", ".arw", ".png", ".tif", ".tiff")):
             continue
         t0 = time.time()
         name = os.path.basename(path)
@@ -137,6 +145,9 @@ def main():
         cv2.imwrite(os.path.join(outdir, stem + ".reg.png"), warped)
         with open(os.path.join(outdir, stem + ".anchors.json"), "w") as f:
             json.dump(reg.anchors(warped, W, H), f)
+        meta = exif_meta(path)
+        with open(os.path.join(outdir, stem + ".meta.json"), "w") as f:
+            json.dump(meta, f)
         g8 = warped if warped.dtype == np.uint8 else (warped / 257).astype(np.uint8)
         sharp = cv2.Laplacian(cv2.cvtColor(g8, cv2.COLOR_BGR2GRAY), cv2.CV_64F).var()
         note = f"sharp={sharp:.0f}"
@@ -156,7 +167,10 @@ def main():
             note += (f" glare white={white:.1f} blk_near={near:.2f} blk_far={far:.2f}"
                      f" veil={far / max(white, 1e-6) * 100:.2f}%")
         rows.append((name, klass, frame, n, note))
-        print(f"{name}  {klass:5s} {frame:8s} {n}/4  {note}  ({time.time() - t0:.0f}s)", flush=True)
+        lens = meta.get("LensModel", "")[:24]
+        print(f"{name}  {klass:5s} {frame:8s} {n}/4  {lens:24s} f/{meta.get('FNumber','?')}"
+              f" {meta.get('ExposureTime','?')}s ISO{meta.get('ISO','?')}  {note}"
+              f"  ({time.time() - t0:.0f}s)", flush=True)
     print("\nDONE", len(rows), "files")
 
 
