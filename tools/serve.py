@@ -66,10 +66,13 @@ SAVE = """<!doctype html><html><head>
 <style>body{background:#111;color:#eee;font:16px -apple-system,system-ui,sans-serif;
 padding:16px;margin:auto;max-width:40em}
 img{width:100%;display:block;background:#000;border:1px solid #333;border-radius:4px}
-p.n{color:#aaa;margin:4px 0 18px}</style></head><body>
-<h3>Long-press each image &rarr; Save Image</h3>
-<p style="color:#aaa">Then open the Photos app, lights out, view fullscreen; swipe to change
-frames. Saved images are exact native resolution; Photos shows them 1:1.</p>
+p.n{color:#aaa;margin:4px 0 18px}
+a.s{background:#2a6;color:#000;padding:6px 16px;border-radius:6px;font-weight:600;
+text-decoration:none;margin-left:10px}</style></head><body>
+<h3>Tap "Save" on each frame (or long-press the image &rarr; Save Image)</h3>
+<p style="color:#aaa">"Save" opens the share sheet &rarr; Save Image puts it in Photos.
+Then Photos app, lights out, fullscreen; swipe to change frames. Saved images are
+exact native resolution; Photos shows them 1:1.</p>
 <div id="list">generating&hellip;</div>
 <script>
 var q={};location.search.slice(1).split('&').forEach(function(kv){var p=kv.split('=');q[p[0]]=p[1];});
@@ -82,6 +85,17 @@ fetch('/cut/'+label+'/manifest.json').then(function(r){return r.json();}).then(f
   order.forEach(function(o,i){
     var im=document.createElement('img');im.src='/cut/'+label+'/'+files[o];
     var p=document.createElement('p');p.className='n';p.textContent=(i+1)+'. '+files[o];
+    var b=document.createElement('a');b.className='s';b.textContent='Save';
+    b.onclick=function(){
+      fetch(im.src).then(function(r){return r.blob();}).then(function(blob){
+        var f;
+        try{f=new File([blob],files[o],{type:'image/png'});}catch(e){}
+        if(f&&navigator.canShare&&navigator.canShare({files:[f]}))
+          return navigator.share({files:[f]});
+        var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+        a.download=files[o];document.body.appendChild(a);a.click();a.remove();
+      });return false;};
+    p.appendChild(b);
     d.appendChild(im);d.appendChild(p);});
 }).catch(function(e){document.getElementById('list').textContent='error: '+e;});
 </script></body></html>"""
