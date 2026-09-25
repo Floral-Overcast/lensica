@@ -223,6 +223,26 @@ a.card:hover { transform: translateY(-2px); border-color: var(--accent);
   font-size: .78rem; font-weight: 600; background: rgb(0 0 0 / .55); color: #fff; }
 .ba .lbl.l { left: .6rem; } .ba .lbl.r { right: .6rem; }
 
+/* ---------- benchy looks switcher ---------- */
+.benchy { padding: .5rem 0; text-align: center; }
+.benchy h2 { margin: .35rem 0 0; }
+.benchy .note { max-width: 60ch; margin-left: auto; margin-right: auto; }
+.lookswitch { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center;
+  margin: 0 0 1.15rem; }
+.lookswitch .chip { font-family: var(--font); font-size: .86rem; font-weight: 600;
+  padding: .4rem .85rem; border-radius: 999px; cursor: pointer; color: var(--body);
+  background: var(--card); border: 1px solid var(--line);
+  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  transition: color .14s, background .14s, border-color .14s; }
+.lookswitch .chip:hover { border-color: var(--accent); color: var(--text); }
+.lookswitch .chip.active { color: var(--accent-ink); background: var(--accent);
+  border-color: transparent; }
+.lookframe { margin: 0 auto; max-width: 720px; }
+.lookframe img { display: block; width: 100%; height: auto; border-radius: var(--radius-lg);
+  border: 1px solid var(--line); box-shadow: var(--shadow); }
+.lookframe figcaption { margin: .7rem auto 0; text-align: center; }
+.lookframe figcaption strong { color: var(--text); }
+
 /* ---------- steps / wizard ---------- */
 .steps { display: flex; gap: .5rem; flex-wrap: wrap; margin: .5rem 0 1.6rem; }
 .step-pill { font-size: .82rem; padding: .3rem .75rem; border-radius: 999px;

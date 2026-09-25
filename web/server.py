@@ -24,7 +24,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 
-from web.app import ingestion, looks, profiles, viewer  # noqa: E402
+from web.app import benchy, ingestion, looks, profiles, viewer  # noqa: E402
 
 app = FastAPI(title="Lensica")
 app.mount("/static", StaticFiles(directory=os.path.join(HERE, "static")), name="static")
@@ -42,7 +42,20 @@ def page(request, name, **ctx):
 # ---------------- pages ----------------
 @app.get("/", response_class=HTMLResponse)
 def landing(request: Request):
-    return page(request, "landing.html")
+    return page(request, "landing.html", benchy_looks=benchy.looks(),
+                benchy_credit=benchy.CREDIT, benchy_note=benchy.NOTE)
+
+
+@app.get("/cuts/benchy/{fname}")
+def benchy_image(fname: str):
+    slug = os.path.splitext(os.path.basename(fname))[0]
+    path = benchy.image_path(slug)
+    if not path:
+        return Response("not found", status_code=404)
+    with open(path, "rb") as f:
+        data = f.read()
+    return Response(data, media_type="image/jpeg",
+                    headers={"Cache-Control": "max-age=86400"})
 
 
 @app.get("/wizard", response_class=HTMLResponse)

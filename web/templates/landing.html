@@ -23,6 +23,34 @@
     capture; right is the same frame with a measured rig's colour rendering transferred onto it.</p>
 </section>
 
+{% if benchy_looks|length > 1 %}
+<hr class="hr">
+
+<section class="benchy">
+  <div class="kicker" style="color:var(--accent);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:.8rem">measured looks</div>
+  <h2>One photo, every rig's colour.</h2>
+  <p class="note" style="margin:.4rem 0 1.1rem">Tap a device to render the same shot through its
+    measured colour mapping. Each mapping is fitted from that rig's capture of our spectrum target.</p>
+
+  <div class="lookswitch" role="tablist" aria-label="Choose a rig">
+    {% for lk in benchy_looks %}
+      <button class="chip {{ 'active' if loop.first else '' }}" role="tab"
+        aria-selected="{{ 'true' if loop.first else 'false' }}"
+        data-slug="{{ lk.slug }}">{{ lk.name }}</button>
+    {% endfor %}
+  </div>
+
+  <figure class="lookframe">
+    <img id="benchyImg" src="/cuts/benchy/{{ benchy_looks[0].slug }}.jpg"
+      alt="3DBenchy rendered through {{ benchy_looks[0].name }}">
+    <figcaption class="note">
+      <strong id="benchyName">{{ benchy_looks[0].name }}</strong> ·
+      Photo: {{ benchy_credit }}.<br>{{ benchy_note }}
+    </figcaption>
+  </figure>
+</section>
+{% endif %}
+
 <hr class="hr">
 
 <section class="grid cols-3">
@@ -66,6 +94,25 @@
     ba.style.setProperty('--split',(t)+'%');
   },30);
   ba.addEventListener('pointerdown',function(){clearInterval(anim);});
+})();
+</script>
+<script>
+(function(){
+  var img=document.getElementById('benchyImg');
+  if(!img) return;
+  var name=document.getElementById('benchyName');
+  var chips=document.querySelectorAll('.lookswitch .chip');
+  // preload so switching is instant after the first pass
+  chips.forEach(function(c){var p=new Image();p.src='/cuts/benchy/'+c.dataset.slug+'.jpg';});
+  chips.forEach(function(c){
+    c.addEventListener('click',function(){
+      chips.forEach(function(o){o.classList.remove('active');o.setAttribute('aria-selected','false');});
+      c.classList.add('active');c.setAttribute('aria-selected','true');
+      img.src='/cuts/benchy/'+c.dataset.slug+'.jpg';
+      img.alt='3DBenchy rendered through '+c.textContent;
+      if(name) name.textContent=c.textContent;
+    });
+  });
 })();
 </script>
 {% endblock %}
