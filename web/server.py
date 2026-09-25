@@ -30,6 +30,27 @@ app = FastAPI(title="Lensica")
 app.mount("/static", StaticFiles(directory=os.path.join(HERE, "static")), name="static")
 templates = Jinja2Templates(directory=os.path.join(HERE, "templates"))
 
+
+def _asset_ver():
+    """Cache-busting tag for versioned static links (CSS/JS). Computed once at
+    startup: short git sha if available, else the app.css mtime. Keeps a stale
+    Cloudflare cache from pairing new HTML with old CSS after a deploy."""
+    try:
+        import subprocess
+        sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT,
+                             capture_output=True, text=True, timeout=2)
+        if sha.returncode == 0 and sha.stdout.strip():
+            return sha.stdout.strip()
+    except Exception:
+        pass
+    try:
+        return str(int(os.path.getmtime(os.path.join(HERE, "static/css/app.css"))))
+    except OSError:
+        return "0"
+
+
+templates.env.globals["asset_ver"] = _asset_ver()
+
 NAV = [("/", "Home"), ("/wizard", "Test"), ("/viewer", "Viewer"),
        ("/upload", "Upload"), ("/library", "Library"), ("/try", "Try a look")]
 
