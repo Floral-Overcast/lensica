@@ -20,7 +20,13 @@ Crowd-sourced lens/camera "look" measurement library + look-recreation filters. 
 - `target/reference/` (gitignored) — 4096x4096 reference renders.
 - `tools/cut.py` — per-display export: deterministic center-crop of the master square at the display's exact native pixels + synthetic frames at that resolution + manifest with sha256s. `--display studio-display` or `--res 2560x1600`.
 
-## Commands (run on cloud, files are local there)
+## Commands (run on SEOLLA, 10.2.1.4 — the pipeline compute host since 2026-09-25)
+Cloud (10.2.1.5) only stores /Sata and serves the :8097 viewer + immich; don't
+run batch processing there. The repo is NFS-visible on Seolla at the same
+path; deps installed on Seolla (numpy/cv2/rawpy/Pillow + exiftool). CT228
+ingestion also executes on Seolla hardware by construction (LXC on Seolla).
+ML/"insilico" exploration: Seolla CPU for v0 miners, vaio (BC-250) for long
+overnight sweeps, SEOL 7900 XTX for image-space network training.
 - `python3 analysis/score_windows.py` (one-time, ~5 min, needs ~4GB RAM)
 - `python3 target/generators/generate.py all --res 4096x4096 --out target/reference`
 - `python3 tools/cut.py --display macbook-pro-14 --out cuts/`
