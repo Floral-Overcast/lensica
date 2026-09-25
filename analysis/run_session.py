@@ -159,6 +159,17 @@ def main():
             gs = prof["gray_steps"]
             note += (f" tone black={np.mean(gs[0]['rgb']):.1f}"
                      f" mid={np.mean(gs[10]['rgb']):.1f} white={np.mean(gs[20]['rgb']):.1f}")
+        if frame == "points":
+            # ambient/validity floor: the frame is black field + sparse dots, so
+            # the median IS the background; high floor = lights on, white
+            # borders, or other user improvisation -> PSF/glare tails invalid
+            bg = np.median(f255[int(H * 0.25):int(H * 0.75),
+                                int(W * 0.25):int(W * 0.75)].mean(axis=2))
+            wt = np.mean([np.mean(c["white"]) for c in
+                          reg.anchors(warped, W, H).values()]) / (
+                257.0 if warped.dtype != np.uint8 else 1.0)
+            amb = bg / max(wt, 1e-6) * 100
+            note += f" amb={amb:.2f}%" + (" AMBIENT-SUSPECT" if amb > 2.0 else "")
         if frame == "split":
             lum = f255.mean(axis=2)[int(H * 0.3): int(H * 0.7)]  # avoid fiducial rows
             white = np.median(lum[:, int(W * 0.15): int(W * 0.35)])
