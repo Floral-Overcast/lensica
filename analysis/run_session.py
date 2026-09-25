@@ -38,22 +38,36 @@ def load(path):
             with rawpy.imread(p) as r:
                 return r.postprocess(half_size=True, gamma=(1, 1), no_auto_bright=True,
                                      output_bps=16, use_camera_wb=True)
+        import subprocess
+        import tempfile
         try:
             rgb = post(path)
+            return rgb[:, :, ::-1].copy(), "raw"
         except Exception:
-            # LibRaw can't parse some Samsung lossless-JPEG DNG variants
-            # ("data corrupted at ..."); dnglab reads them fine, so convert
-            import subprocess
-            import tempfile
-            tmp = tempfile.mktemp(suffix=".dng")
-            try:
-                subprocess.run(["dnglab", "convert", "-c", "uncompressed", path, tmp],
-                               check=True, capture_output=True)
-                rgb = post(tmp)
-            finally:
-                if os.path.exists(tmp):
-                    os.unlink(tmp)
-        return rgb[:, :, ::-1].copy(), "raw"
+            pass
+        # LibRaw rejects some Samsung DNGs; sometimes dnglab can read them,
+        # but on a truly corrupt raw stream it emits a near-uniform garbage
+        # field, so validate before trusting it
+        tmp = tempfile.mktemp(suffix=".dng")
+        try:
+            subprocess.run(["dnglab", "convert", "-c", "uncompressed", path, tmp],
+                           check=True, capture_output=True)
+            rgb = post(tmp)
+            if rgb.std() > 1:
+                return rgb[:, :, ::-1].copy(), "raw"
+        except Exception:
+            pass
+        finally:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+        # raw stream is dead: salvage the embedded full-res camera JPEG,
+        # which is real jpeg-class data (Samsung writes it separately)
+        out = subprocess.run(["exiftool", "-b", "-JpgFromRaw", path], capture_output=True)
+        if len(out.stdout) > 10000:
+            arr = cv2.imdecode(np.frombuffer(out.stdout, np.uint8), cv2.IMREAD_COLOR)
+            if arr is not None:
+                return arr, "jpeg-preview"
+        raise RuntimeError("raw stream corrupt, no usable embedded preview")
     return cv2.imread(path, cv2.IMREAD_COLOR), "jpeg"
 
 
