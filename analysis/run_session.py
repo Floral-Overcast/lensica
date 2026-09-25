@@ -48,11 +48,14 @@ def load(path):
         # (LibRaw: "data corrupted at ..."). dnglab "decodes" those to plausible
         # garbage, so don't try — salvage the embedded full-res camera JPEG,
         # which Samsung writes separately and survives intact (jpeg class)
-        out = subprocess.run(["exiftool", "-b", "-JpgFromRaw", path], capture_output=True)
-        if len(out.stdout) > 10000:
-            arr = cv2.imdecode(np.frombuffer(out.stdout, np.uint8), cv2.IMREAD_COLOR)
-            if arr is not None:
-                return arr, "jpeg-preview"
+        # Samsung stores the full-res JPEG under the DNG's PreviewImage tag
+        # (JpgFromRaw is empty on these files) — 8160x4592, decodes clean.
+        for tag in ("-PreviewImage", "-JpgFromRaw"):
+            out = subprocess.run(["exiftool", "-b", tag, path], capture_output=True)
+            if len(out.stdout) > 10000:
+                arr = cv2.imdecode(np.frombuffer(out.stdout, np.uint8), cv2.IMREAD_COLOR)
+                if arr is not None:
+                    return arr, "jpeg-preview"
         raise RuntimeError("raw stream corrupt, no usable embedded preview")
     return cv2.imread(path, cv2.IMREAD_COLOR), "jpeg"
 
