@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.join(ROOT, "target", "generators"))
 sys.path.insert(0, os.path.join(ROOT, "extract"))
 import generate  # noqa: E402
 import register as reg  # noqa: E402
+import rignames  # noqa: E402  (canonical device display names)
 import tone_curves  # noqa: E402
 
 NAMES = {v: k for k, v in generate.FRAME_IDS.items()}
@@ -183,8 +184,8 @@ def main():
         rows.append({"file": name, "stem": stem, "klass": klass, "frame": frame,
                      "n": n, "sharp": sharp, "amb": "AMBIENT-SUSPECT" in note,
                      "lens": meta.get("LensModel") or meta.get("Model") or ""})
-        lens = meta.get("LensModel", "")[:24]
-        print(f"{name}  {klass:5s} {frame:8s} {n}/4  {lens:24s} f/{meta.get('FNumber','?')}"
+        rig = rignames.rig_name(meta.get("Model"), meta.get("LensModel"))[:28]
+        print(f"{name}  {klass:5s} {frame:8s} {n}/4  {rig:28s} f/{meta.get('FNumber','?')}"
               f" {meta.get('ExposureTime','?')}s ISO{meta.get('ISO','?')}  {note}"
               f"  ({time.time() - t0:.0f}s)", flush=True)
 

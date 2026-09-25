@@ -14,8 +14,8 @@
 <div class="grid cols-2">
   {% for p in profiles %}
   <a class="card lib-card" href="/profile/{{ p.id }}">
-    <div class="lens">{{ p.lens }}</div>
-    <div class="body">{{ p.model }}</div>
+    <div class="lens">{{ p.model_disp if p.fixed else p.lens_disp }}</div>
+    <div class="body">{{ 'fixed lens' if p.fixed else p.model_disp }}</div>
     <div class="kv">
       {% for c in p.classes %}<span class="badge {{ 'ok' if c=='raw' else '' }}">{{ c }}</span>{% endfor %}
       <span class="badge">{{ p.frames|length }} frames</span>

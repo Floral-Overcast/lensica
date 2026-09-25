@@ -20,19 +20,21 @@ import numpy as np
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(ROOT, "analysis"))
 import lookmatch  # noqa: E402
+sys.path.insert(0, os.path.join(ROOT, "extract"))
+import rignames  # noqa: E402  (canonical device display names)
 
 CACHE = os.path.join(ROOT, "web", "cuts", "looks")
 STIMULUS = (1640, 2360)
 
 # Looks learned from the sample sessions. a_model = EXIF Model of the source rig.
 LOOKS = [
-    {"id": "xperia", "name": "Xperia 1 IV rendering",
-     "desc": "Sony's phone colour science and tone (learned A7CII → Xperia).",
+    {"id": "xperia", "name": "Sony Xperia 1 IV rendering",
+     "desc": "Sony's phone colour science and tone (learned A7C II → Xperia 1 IV).",
      "a_dir": "/Sata/temp/A7cii2/processed", "a_match": "SG-image",
      "b_dir": "/Sata/temp/xperia/processed", "b_match": "XQ-CT54",
      "a_model": "ILCE-7CM2"},
-    {"id": "a7cii", "name": "Sony A7CII rendering",
-     "desc": "Full-frame body look (learned Xperia → A7CII).",
+    {"id": "a7cii", "name": "Sony A7C II rendering",
+     "desc": "Full-frame body look (learned Xperia 1 IV → A7C II).",
      "a_dir": "/Sata/temp/xperia/processed", "a_match": "XQ-CT54",
      "b_dir": "/Sata/temp/A7cii2/processed", "b_match": "SG-image",
      "a_model": "XQ-CT54"},
@@ -115,6 +117,7 @@ def apply_look(look_id, data):
     M = get_matrix(look)
     out = lookmatch.apply_matrix(M, rgb)
     profiled = bool(model) and model.strip().lower() == look["a_model"].lower()
+    # profiled check uses the raw EXIF model above; the badge shows the friendly name
     return {"before": _to_png_datauri(rgb), "after": _to_png_datauri(out),
-            "profiled": profiled, "model": model or "unknown", "lens": lens,
-            "look": look["name"]}
+            "profiled": profiled, "model": rignames.rig_name(model, lens) or "unknown",
+            "lens": lens, "look": look["name"]}

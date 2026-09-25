@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Lensica — {{ prof.lens }}{% endblock %}
+{% block title %}Lensica — {{ prof.name }}{% endblock %}
 {% block content %}
 <p class="note"><a href="/library">&larr; library</a></p>
-<h1>{{ prof.lens }}</h1>
+<h1>{{ prof.name }}</h1>
 <div class="kv" style="margin-bottom:6px">
-  <span class="badge">{{ prof.model }}</span>
+  <span class="badge">{{ 'fixed lens' if prof.fixed else prof.model_disp }}</span>
   {% for c in prof.classes %}<span class="badge {{ 'ok' if c=='raw' else '' }}">{{ c }}</span>{% endfor %}
   <span class="badge">{{ prof.n }} shots</span>
 </div>

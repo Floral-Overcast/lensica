@@ -20,6 +20,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 sys.path.insert(0, os.path.join(ROOT, "analysis"))
 sys.path.insert(0, os.path.join(ROOT, "extract"))
 import report  # noqa: E402  (reuse extraction: collect/radial_profile/glare/mtf_fields/psf_thumbs)
+import rignames  # noqa: E402  (canonical device display names; single source of truth)
 
 # Where profiled sessions live. Real captures at stimulus 1640x2360 (per BRIEF).
 PROFILE_DIRS = [
@@ -60,8 +61,15 @@ def list_profiles():
         model = (meta.get("Model") or "?").strip()
         lens = (meta.get("LensModel") or meta.get("Model") or "?").strip()
         pid = profile_id(model, lens)
+        # EXIF strings (model/lens) stay the grouping keys; the *_disp fields are
+        # display-only, from the canonical helper. fixed = lens restates the body
+        # (phones/compacts), so the card shows just the device.
+        fixed = (not lens) or lens.lower().startswith(model.lower())
         g = groups.setdefault(pid, {
             "id": pid, "model": model, "lens": lens,
+            "model_disp": rignames.MODELS.get(model, model),
+            "lens_disp": rignames.LENSES.get(lens, lens),
+            "name": rignames.rig_name(model, lens), "fixed": fixed,
             "frames": set(), "classes": set(), "n": 0})
         g["frames"].add(r["frame"])
         g["classes"].add(r["klass"])
