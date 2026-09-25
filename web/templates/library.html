@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Lensica — library{% endblock %}
+{% block content %}
+<h1>Profile library</h1>
+<p class="note">Every profiled (body, lens) in the current dataset. Click through for the
+  full measurement report. RAW and camera-JPEG classes are tracked separately.</p>
+
+{% if not profiles %}
+<div class="card"><p>No processed sessions found in the configured data dirs:</p>
+  <ul class="note">{% for d in dirs %}<li><code>{{ d }}</code></li>{% endfor %}</ul>
+  <p class="note">Run a session through <a href="/upload">Upload</a> to populate the library.</p>
+</div>
+{% else %}
+<div class="grid cols-2">
+  {% for p in profiles %}
+  <a class="card lib-card" href="/profile/{{ p.id }}">
+    <div class="lens">{{ p.lens }}</div>
+    <div class="body">{{ p.model }}</div>
+    <div class="kv">
+      {% for c in p.classes %}<span class="badge {{ 'ok' if c=='raw' else '' }}">{{ c }}</span>{% endfor %}
+      <span class="badge">{{ p.frames|length }} frames</span>
+      <span class="badge">{{ p.n }} shots</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

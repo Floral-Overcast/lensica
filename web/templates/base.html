@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en" data-theme="flora-glass">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Lensica{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/app.css">
+<script>
+// set theme before paint to avoid flash; dark (flora-glass) is default
+(function(){try{var t=localStorage.getItem('lensica-theme')||'flora-glass';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+{% block head %}{% endblock %}
+</head>
+<body>
+<header class="shell-header"><div class="wrap nav">
+  <a class="brand" href="/"><span class="dot"></span> Lensica</a>
+  {% for href, label in nav %}
+    <a class="navlink {{ 'active' if path == href else '' }}" href="{{ href }}">{{ label }}</a>
+  {% endfor %}
+  <span class="spacer"></span>
+  <button class="theme-toggle" id="themeBtn" type="button" aria-label="Toggle theme">
+    <span id="themeIcon">&#9789;</span> <span id="themeLabel">Dark</span>
+  </button>
+</div></header>
+
+<main><div class="wrap {% block wrapclass %}{% endblock %}">
+{% block content %}{% endblock %}
+</div></main>
+
+<footer class="shell-footer"><div class="wrap">
+  Lensica — crowd-sourced lens &amp; camera "look" measurement. Target v1, display-referred.
+  Measurements are tagged by target version and capture class (RAW / camera-JPEG).
+</div></footer>
+
+<script>
+(function(){
+  var btn=document.getElementById('themeBtn');
+  function paint(t){
+    var dark=(t==='flora-glass');
+    document.getElementById('themeLabel').textContent=dark?'Dark':'Light';
+    document.getElementById('themeIcon').innerHTML=dark?'☾':'☀';
+  }
+  paint(document.documentElement.getAttribute('data-theme'));
+  btn.addEventListener('click',function(){
+    var cur=document.documentElement.getAttribute('data-theme');
+    var next=cur==='flora-glass'?'op-glass':'flora-glass';
+    document.documentElement.setAttribute('data-theme',next);
+    try{localStorage.setItem('lensica-theme',next);}catch(e){}
+    paint(next);
+  });
+})();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

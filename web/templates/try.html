@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Lensica — try a look{% endblock %}
+{% block wrapclass %}narrow{% endblock %}
+{% block content %}
+<h1>Try a look</h1>
+<p class="note">Upload one of your own photos and preview a measured rig's colour rendering
+  on it. Your photo is processed in memory and discarded — nothing is stored. If your
+  photo came from a profiled camera, it's a true A&rarr;B mapping; otherwise it's an
+  approximate preview.</p>
+
+{% if not looks %}
+<div class="card"><p class="note">No looks available — the sample sessions needed to learn
+  a colour mapping aren't present on this host.</p></div>
+{% else %}
+<div class="field" style="max-width:340px">
+  <label>Target look</label>
+  <select id="look">
+    {% for l in looks %}<option value="{{ l.id }}">{{ l.name }}</option>{% endfor %}
+  </select>
+  <p class="note" id="lookdesc" style="margin:2px 0 0"></p>
+</div>
+
+<div class="drop" id="drop" style="padding:30px 20px">
+  <p style="color:var(--text)"><b>Drop a photo</b> or click to choose</p>
+  <p class="note" style="margin:0">jpg · jpeg · png · tif · dng · arw</p>
+  <input type="file" id="file" accept=".jpg,.jpeg,.png,.tif,.tiff,.dng,.arw" hidden>
+</div>
+<div style="margin-top:14px">
+  <button class="btn primary" id="go" type="button" disabled>Preview look</button>
+  <span id="status" class="dim" style="margin-left:12px"></span>
+</div>
+
+<div id="result" hidden style="margin-top:22px">
+  <div id="badge"></div>
+  <div class="ba" id="ba" style="margin-top:14px">
+    <img class="before" id="before" alt="your photo">
+    <img class="after" id="after" alt="look applied">
+    <div class="lbl l">your photo</div>
+    <div class="lbl r" id="afterlbl">look</div>
+    <div class="handle" id="baHandle"></div>
+  </div>
+  <p class="note center" style="margin-top:10px">Drag the divider to compare.</p>
+</div>
+{% endif %}
+
+<script id="looksdata" type="application/json">{{ looks|tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  var looks=JSON.parse(document.getElementById('looksdata').textContent);
+  var descs={};looks.forEach(function(l){descs[l.id]=l.desc;});
+  var sel=document.getElementById('look'),desc=document.getElementById('lookdesc');
+  function upDesc(){desc.textContent=descs[sel.value]||'';}
+  sel.addEventListener('change',upDesc);upDesc();
+
+  var file=document.getElementById('file'),drop=document.getElementById('drop');
+  var go=document.getElementById('go'),status=document.getElementById('status');
+  var chosen=null;
+  drop.addEventListener('click',function(){file.click();});
+  file.addEventListener('change',function(){chosen=file.files[0];go.disabled=!chosen;
+    drop.querySelector('b').textContent=chosen?chosen.name:'Drop a photo';});
+  ['dragenter','dragover'].forEach(function(e){drop.addEventListener(e,function(ev){
+    ev.preventDefault();drop.classList.add('hot');});});
+  ['dragleave','drop'].forEach(function(e){drop.addEventListener(e,function(ev){
+    ev.preventDefault();drop.classList.remove('hot');});});
+  drop.addEventListener('drop',function(ev){chosen=ev.dataTransfer.files[0];
+    go.disabled=!chosen;drop.querySelector('b').textContent=chosen?chosen.name:'Drop a photo';});
+
+  go.addEventListener('click',function(){
+    if(!chosen)return;go.disabled=true;
+    status.innerHTML='<span class="spin" style="display:inline-block;vertical-align:middle"></span> processing…';
+    var fd=new FormData();fd.append('photo',chosen);
+    fetch('/api/try?look='+encodeURIComponent(sel.value),{method:'POST',body:fd})
+      .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+      .then(function(res){
+        go.disabled=false;
+        if(!res.ok){status.textContent='error: '+(res.j.error||'failed');return;}
+        status.textContent='';
+        var j=res.j;
+        document.getElementById('before').src=j.before;
+        document.getElementById('after').src=j.after;
+        document.getElementById('afterlbl').textContent=j.look;
+        var b=document.getElementById('badge');
+        if(j.profiled){
+          b.innerHTML='<span class="badge ok">true mapping · source '+j.model+' is profiled</span>';
+        }else{
+          b.innerHTML='<span class="badge warn">approximate — source camera ('+j.model+
+            ') not profiled; assumed neutral sRGB</span>';
+        }
+        document.getElementById('result').hidden=false;
+      }).catch(function(e){go.disabled=false;status.textContent='error: '+e;});
+  });
+
+  // slider
+  var ba=document.getElementById('ba');
+  function setSplit(x){var r=ba.getBoundingClientRect();
+    var pct=Math.max(0,Math.min(100,(x-r.left)/r.width*100));
+    ba.style.setProperty('--split',pct+'%');}
+  var drag=false;
+  ba.addEventListener('pointerdown',function(e){drag=true;setSplit(e.clientX);ba.setPointerCapture(e.pointerId);});
+  ba.addEventListener('pointermove',function(e){if(drag)setSplit(e.clientX);});
+  ba.addEventListener('pointerup',function(){drag=false;});
+})();
+</script>
+{% endblock %}

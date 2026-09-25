@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Lensica — measure the look of any lens{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="kicker">crowd-sourced optical measurement</div>
+  <h1>The look of every lens, measured.</h1>
+  <p class="lead">Photograph one standardized on-screen target suite in a dark room.
+    Lensica extracts the real numbers — tone, resolution, vignette, glare, bokeh —
+    and turns them into a shareable profile and a look you can apply.</p>
+  <div class="cta">
+    <a class="btn primary lg" href="/wizard">Start a test</a>
+    <a class="btn ghost lg" href="/library">Browse profiles</a>
+  </div>
+
+  <div class="ba" id="ba">
+    <img class="before" src="/static/hero/before.jpg" alt="original capture">
+    <img class="after" src="/static/hero/after.jpg" alt="look transfer applied">
+    <div class="lbl l">source</div>
+    <div class="lbl r">look applied</div>
+    <div class="handle" id="baHandle"></div>
+  </div>
+  <p class="note center" style="margin-top:12px">Drag the divider. Left is the source
+    capture; right is the same frame with a measured rig's colour rendering transferred onto it.</p>
+</section>
+
+<hr class="hr">
+
+<section class="grid cols-3">
+  <div class="card">
+    <h3>Standardized stimulus</h3>
+    <p class="note">A content-addressed target set, shown 1:1 at native pixels on an
+      Apple display. Pixel-exact or invalid — no scaling, ever. Every frame is a
+      controlled probe: ramps, spectra, skin tones, slanted edges, point sources.</p>
+  </div>
+  <div class="card">
+    <h3>Real extraction</h3>
+    <p class="note">Fiducial registration, per-channel tone curves, slanted-edge MTF,
+      radial vignette, veiling-glare and PSF crops. RAW and camera-JPEG are separate
+      measurement classes; RAW earns higher confidence.</p>
+  </div>
+  <div class="card">
+    <h3>Network effect</h3>
+    <p class="note">Every capture makes the library denser. The moat is measurements
+      plus contributors, not image hoarding — but originals are archived so each
+      methodology improvement re-processes the whole set.</p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  var ba=document.getElementById('ba');
+  function setSplit(clientX){
+    var r=ba.getBoundingClientRect();
+    var pct=Math.max(0,Math.min(100,(clientX-r.left)/r.width*100));
+    ba.style.setProperty('--split',pct+'%');
+  }
+  var drag=false;
+  ba.addEventListener('pointerdown',function(e){drag=true;setSplit(e.clientX);ba.setPointerCapture(e.pointerId);});
+  ba.addEventListener('pointermove',function(e){if(drag)setSplit(e.clientX);});
+  ba.addEventListener('pointerup',function(){drag=false;});
+  // gentle auto-sweep hint on load
+  var t=0,dir=1,anim=setInterval(function(){
+    t+=dir*0.9; if(t>66){dir=-1;} if(t<34){dir=1;}
+    ba.style.setProperty('--split',(t)+'%');
+  },30);
+  ba.addEventListener('pointerdown',function(){clearInterval(anim);});
+})();
+</script>
+{% endblock %}

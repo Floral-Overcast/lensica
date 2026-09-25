@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Lensica — {{ prof.lens }}{% endblock %}
+{% block content %}
+<p class="note"><a href="/library">&larr; library</a></p>
+<h1>{{ prof.lens }}</h1>
+<div class="kv" style="margin-bottom:6px">
+  <span class="badge">{{ prof.model }}</span>
+  {% for c in prof.classes %}<span class="badge {{ 'ok' if c=='raw' else '' }}">{{ c }}</span>{% endfor %}
+  <span class="badge">{{ prof.n }} shots</span>
+</div>
+<p class="note">Display-referred, Target v1. Frequencies are cycles per stimulus pixel.
+  Registration warp costs a little MTF equally for every capture, so compare curves and
+  treat absolute values as slightly pessimistic.</p>
+
+{% if not sections %}
+<div class="card"><p class="note">No extractable measurements for this profile yet
+  (needs edges / tone / flat / split / points frames in the processed set).</p></div>
+{% endif %}
+
+{% for s in sections %}
+<h2>{{ s.title }}{% if s.klass %} <span class="dim" style="font-size:.9rem">· {{ s.klass }} class</span>{% endif %}</h2>
+<p class="note">{{ s.note }}</p>
+{{ s.html|safe }}
+{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script>{{ tip_js|safe }}</script>
+{% endblock %}

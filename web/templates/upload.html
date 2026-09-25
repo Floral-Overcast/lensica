@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Lensica — upload a session{% endblock %}
+{% block wrapclass %}narrow{% endblock %}
+{% block content %}
+<h1>Upload a session</h1>
+<p class="note">Drop the whole session folder's files (RAW and/or JPEG). Each file is
+  validated — extension whitelist, 80&nbsp;MB cap, decode-or-reject — then registered and
+  scored. Test-chart uploads are kept so future methodology improvements can re-process
+  them. You get a per-shot verdict: frame identified, markers found, pass/fail, reshoot hint.</p>
+
+<div class="field" style="max-width:280px">
+  <label>Stimulus resolution (the display you shot)</label>
+  <select id="size">
+    {% for s in sizes %}<option value="{{ s }}" {{ 'selected' if s==default_size else '' }}>{{ s }}</option>{% endfor %}
+  </select>
+</div>
+
+<div class="drop" id="drop">
+  <p style="font-size:1.1rem;color:var(--text)"><b>Drop files here</b> or click to choose</p>
+  <p class="note" style="margin:0">jpg · jpeg · png · tif · dng · arw</p>
+  <input type="file" id="file" multiple accept=".jpg,.jpeg,.png,.tif,.tiff,.dng,.arw" hidden>
+</div>
+
+<div id="picked" class="note" style="margin-top:10px"></div>
+<div style="margin-top:14px">
+  <button class="btn primary" id="go" type="button" disabled>Upload &amp; analyze</button>
+  <span id="status" class="dim" style="margin-left:12px"></span>
+</div>
+
+<ul class="verdicts" id="verdicts"></ul>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var files=[];
+var drop=document.getElementById('drop'),input=document.getElementById('file');
+var go=document.getElementById('go'),picked=document.getElementById('picked');
+var verdicts=document.getElementById('verdicts'),status=document.getElementById('status');
+
+function setFiles(list){
+  files=Array.prototype.slice.call(list);
+  picked.textContent=files.length?(files.length+' file'+(files.length>1?'s':'')+' selected'):'';
+  go.disabled=!files.length;
+}
+drop.addEventListener('click',function(){input.click();});
+input.addEventListener('change',function(){setFiles(input.files);});
+['dragenter','dragover'].forEach(function(e){drop.addEventListener(e,function(ev){
+  ev.preventDefault();drop.classList.add('hot');});});
+['dragleave','drop'].forEach(function(e){drop.addEventListener(e,function(ev){
+  ev.preventDefault();drop.classList.remove('hot');});});
+drop.addEventListener('drop',function(ev){setFiles(ev.dataTransfer.files);});
+
+function row(v){
+  var li=document.createElement('li');li.className='verdict';
+  var cls=v.ok?'ok':'bad';var tag=v.ok?'pass':'reshoot';
+  li.innerHTML='<span class="badge '+cls+'">'+tag+'</span>'+
+    '<span class="frame">'+(v.frame||'?')+'</span>'+
+    '<span class="mk">'+(v.markers||0)+'/4 · '+(v.name||'')+(v.klass?(' · '+v.klass):'')+'</span>'+
+    '<span class="hint">'+(v.hint||v.note||'')+'</span>';
+  verdicts.appendChild(li);
+}
+
+go.addEventListener('click',function(){
+  if(!files.length)return;
+  go.disabled=true;verdicts.innerHTML='';
+  status.innerHTML='<span class="spin" style="display:inline-block;vertical-align:middle"></span> uploading…';
+  var fd=new FormData();
+  files.forEach(function(f){fd.append('files',f);});
+  fetch('/api/upload',{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(res){
+    (res.rejected||[]).forEach(function(rj){
+      row({ok:false,frame:'rejected',markers:0,name:rj.name,hint:rj.reason});});
+    if(!res.accepted||!res.accepted.length){status.textContent='no valid files accepted';go.disabled=false;return;}
+    status.innerHTML='<span class="spin" style="display:inline-block;vertical-align:middle"></span> analyzing '+res.accepted.length+' file(s)…';
+    var size=document.getElementById('size').value;
+    var es=new EventSource('/api/ingest/'+res.session+'?size='+encodeURIComponent(size));
+    es.onmessage=function(ev){
+      var v=JSON.parse(ev.data);
+      if(v.done){es.close();status.textContent='done';go.disabled=false;return;}
+      row(v);
+    };
+    es.onerror=function(){es.close();status.textContent='stream ended';go.disabled=false;};
+  }).catch(function(e){status.textContent='error: '+e;go.disabled=false;});
+});
+</script>
+{% endblock %}

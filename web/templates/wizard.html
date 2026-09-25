@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}Lensica — test wizard{% endblock %}
+{% block wrapclass %}narrow{% endblock %}
+{% block content %}
+<h1>Run a test</h1>
+<p class="note">One session = one (body, lens, display) triple, about 15 minutes once
+  set up. Work through the steps in order. Everything here is from the capture protocol.</p>
+
+<div class="steps" id="steps">
+  <span class="step-pill active" data-step="0">1 · Gear</span>
+  <span class="step-pill" data-step="1">2 · Display prep</span>
+  <span class="step-pill" data-step="2">3 · Camera setup</span>
+  <span class="step-pill" data-step="3">4 · Open target on display</span>
+  <span class="step-pill" data-step="4">5 · Shot list</span>
+</div>
+
+<!-- step 0 -->
+<section class="wz card" data-panel="0">
+  <h2>Pick your gear</h2>
+  <div class="field"><label>Camera body</label>
+    <input id="body" placeholder="e.g. Sony A7C II (ILCE-7CM2)"></div>
+  <div class="field"><label>Lens (exact, incl. adapter)</label>
+    <input id="lens" placeholder="e.g. SG-image 35mm F2.2 FE"></div>
+  <div class="field"><label>Apple display</label>
+    <select id="display">
+      {% for key, wh in displays %}
+      <option value="{{ key }}">{{ key }} — {{ wh[0] }}×{{ wh[1] }}</option>
+      {% endfor %}
+    </select></div>
+  <p class="note">Shoot RAW (add camera-JPEG too if you want the body's processing look —
+    it's a separate, first-class measurement class). Sturdy tripod, 2s timer or remote,
+    never a finger-press.</p>
+</section>
+
+<!-- step 1 -->
+<section class="wz card" data-panel="1" hidden>
+  <h2>Display prep (do once, don't touch again)</h2>
+  <ol>
+    <li><b>True Tone OFF, Night Shift OFF, auto-brightness OFF</b> (macOS, iOS, iPadOS
+      alike). Measured, not theoretical: True Tone shifted a display white ~6% redder at
+      the sensor and drifts with ambient light — it silently breaks comparability.</li>
+    <li>Brightness to a fixed notch, roughly 2/3. Note the notch. Never change it mid-session.</li>
+    <li>Show each frame at exactly 1:1 native pixels, fullscreen, no UI. The viewer in
+      step 4 handles this.</li>
+    <li>Let the panel warm up ~15 min before the first frame (backlight drift).</li>
+  </ol>
+  <div class="tip-focus"><b>Dark room.</b> No windows leaking, no LEDs. Tape over camera
+    and monitor status lights. Wear dark clothes — you reflect.</div>
+</section>
+
+<!-- step 2 -->
+<section class="wz card" data-panel="2" hidden>
+  <h2>Camera setup</h2>
+  <ul>
+    <li>RAW (+JPEG). Base ISO. White balance <b>LOCKED</b> to any fixed preset (note which).
+      Never auto-WB. Manual exposure. IBIS/OIS OFF (tripod).</li>
+    <li>Focus by magnified live view on a corner fiducial, then switch to MF and don't touch.</li>
+    <li>Square to the screen (bubble level), centered, all four corner fiducials well
+      inside the frame with ~5% margin. Closer = more pixels per stimulus pixel = more
+      confidence.</li>
+    <li>On the tone frame, expose so the 255 white block sits just under clipping
+      (blinkies barely off). Reuse that exposure for every colour frame in the session.</li>
+    <li>Keep shutter ≥ 1/30s (OLED/PWM). On a tripod in the dark that's natural.</li>
+  </ul>
+</section>
+
+<!-- step 3 -->
+<section class="wz card" data-panel="3" hidden>
+  <h2>Open the target on the display device</h2>
+  <p class="note">On the Apple display device itself (not this computer, unless this
+    <em>is</em> the display), open the viewer and follow its 1:1 instructions. Scan the code:</p>
+  <div class="qr-box">
+    <img id="qr" alt="QR to viewer">
+    <p class="note">or open <code id="qrurl"></code></p>
+  </div>
+</section>
+
+<!-- step 4 -->
+<section class="wz card" data-panel="4" hidden>
+  <h2>Shot list <span class="dim" id="rig" style="font-size:.9rem"></span></h2>
+  <p class="note">Per lens. Same tripod position; re-frame as needed if you swap lenses.
+    Tick as you go.</p>
+  <ol class="shotlist" id="shotlist"></ol>
+  <div class="tip-focus" id="focustip" style="display:none">
+    <b>Focus-lock trick for the points frame.</b> AF hunts on a black field with sparse
+    dots. Do <b>not</b> add room light. Acquire focus on the previous bright frame
+    (flat/edges), lock it (long-press AE/AF lock, or manual focus), then cycle to points
+    without refocusing. The display distance is unchanged, so the lock is exact.
+  </div>
+  <p class="note" style="margin-top:20px">Then a darkness check: one exposure with the
+    display showing pure black. Anything visible is light leak — fix the room. When
+    you're done, <a href="/upload">upload the session &rarr;</a></p>
+</section>
+
+<div style="display:flex;gap:12px;margin-top:22px">
+  <button class="btn ghost" id="prev" type="button">Back</button>
+  <button class="btn primary" id="next" type="button">Next</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var SHOTS=[
+ {f:'tone',ap:'f/5.6–f/8',fo:'screen',n:'sets session exposure'},
+ {f:'flat',ap:'same',fo:'screen',n:'vignetting + display uniformity'},
+ {f:'split',ap:'same',fo:'screen',n:'veiling glare: white half spilling into black'},
+ {f:'organic',ap:'same',fo:'screen',n:'the big one; optional 2nd shot at +1EV'},
+ {f:'spectrum',ap:'same',fo:'screen',n:'colour cube coverage'},
+ {f:'skin',ap:'same',fo:'screen',n:'skin-tone rendering'},
+ {f:'edges',ap:'same',fo:'screen',n:'sharpest focus, NO defocus allowed'},
+ {f:'points',ap:'wide open',fo:'screen',n:'in-focus PSF — use the focus-lock trick'},
+ {f:'points',ap:'wide open',fo:'racked to MFD',n:'bokeh balls (defocused)'},
+ {f:'points',ap:'2 stops down',fo:'racked to MFD',n:'aperture-shape bokeh'}
+];
+(function(){
+  var sl=document.getElementById('shotlist');
+  SHOTS.forEach(function(s,i){
+    var li=document.createElement('li');li.className='shot';
+    li.innerHTML='<span class="n">'+(i+1)+'</span><div><label style="cursor:pointer">'+
+      '<input type="checkbox" style="margin-right:8px"><b>'+s.f+'</b></label>'+
+      '<div class="meta">'+s.ap+' · focus '+s.fo+' · '+s.n+'</div></div>';
+    sl.appendChild(li);
+  });
+  document.getElementById('focustip').style.display='';
+
+  var step=0,panels=document.querySelectorAll('.wz'),pills=document.querySelectorAll('.step-pill');
+  function render(){
+    panels.forEach(function(p){p.hidden=(+p.dataset.panel!==step);});
+    pills.forEach(function(p){var s=+p.dataset.step;
+      p.classList.toggle('active',s===step);p.classList.toggle('done',s<step);});
+    document.getElementById('prev').disabled=(step===0);
+    document.getElementById('next').disabled=(step===panels.length-1);
+    if(step===3){
+      var url=location.origin+'/viewer';
+      document.getElementById('qr').src='/api/qr?data='+encodeURIComponent(url);
+      document.getElementById('qrurl').textContent=url;
+    }
+    if(step===4){
+      var b=document.getElementById('body').value||'(body)';
+      var l=document.getElementById('lens').value||'(lens)';
+      document.getElementById('rig').textContent='· '+b+' + '+l;
+    }
+  }
+  document.getElementById('next').onclick=function(){if(step<panels.length-1){step++;render();}};
+  document.getElementById('prev').onclick=function(){if(step>0){step--;render();}};
+  pills.forEach(function(p){p.onclick=function(){step=+p.dataset.step;render();};});
+  render();
+})();
+</script>
+{% endblock %}
