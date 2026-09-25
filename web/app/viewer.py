@@ -26,7 +26,7 @@ CACHE = os.path.join(ROOT, "web", "cuts", "web")
 LOCK = threading.Lock()
 
 FRAME_ORDER = ["tone", "flat", "split", "organic", "spectrum", "skin", "edges", "points"]
-PUBLIC = False  # LAN-only: keep organic. Flip to True for any public set (drops organic).
+PUBLIC = True  # site is public at lensica.floralovercast.com since 2026-09-25 (organic excluded)
 
 
 def order():
