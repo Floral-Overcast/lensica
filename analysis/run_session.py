@@ -105,7 +105,7 @@ def main():
     pad = s + 2 * q
     outdir = os.path.join(a.folder, "processed")
     os.makedirs(outdir, exist_ok=True)
-    rows = []
+    rows, skipped = [], []
     for path in sorted(glob.glob(os.path.join(a.folder, a.glob))):
         if not path.lower().endswith((".jpg", ".jpeg", ".dng", ".arw", ".png", ".tif", ".tiff")):
             continue
@@ -114,16 +114,16 @@ def main():
         try:
             img, klass = load(path)
         except Exception as e:
-            rows.append((name, "?", "-", 0, f"load failed: {e}"))
+            skipped.append((name, f"load failed: {e}"))
             print(f"{name}  load failed: {e}", flush=True)
             continue
         if img is None:
-            rows.append((name, klass, "-", 0, "unreadable"))
+            skipped.append((name, "unreadable"))
             continue
         corners, ids = detect(img)
         fids = [int(i) // 4 for i in ids if int(i) < len(NAMES) * 4]
         if not fids:
-            rows.append((name, klass, "-", 0, "no fiducials"))
+            skipped.append((name, "no fiducials"))
             print(f"{name}  {klass:5s} ---      0/4  no fiducials", flush=True)
             continue
         fid = int(np.bincount(fids).argmax())
@@ -136,7 +136,10 @@ def main():
                 dst.extend(geo[k])
         n = len(src) // 4
         if n < 3:
-            rows.append((name, klass, frame, n, "too few fiducials"))
+            m = exif_meta(path)
+            rows.append({"file": name, "stem": "", "klass": klass, "frame": frame,
+                         "n": n, "sharp": 0.0, "amb": False,
+                         "lens": m.get("LensModel") or m.get("Model") or ""})
             print(f"{name}  {klass:5s} {frame:8s} {n}/4  too few fiducials", flush=True)
             continue
         Hm, _ = cv2.findHomography(np.array(src, np.float32), np.array(dst, np.float32), cv2.RANSAC)
@@ -177,12 +180,46 @@ def main():
             far = np.median(lum[:, int(W * 0.70): int(W * 0.80)])
             note += (f" glare white={white:.1f} blk_near={near:.2f} blk_far={far:.2f}"
                      f" veil={far / max(white, 1e-6) * 100:.2f}%")
-        rows.append((name, klass, frame, n, note))
+        rows.append({"file": name, "stem": stem, "klass": klass, "frame": frame,
+                     "n": n, "sharp": sharp, "amb": "AMBIENT-SUSPECT" in note,
+                     "lens": meta.get("LensModel") or meta.get("Model") or ""})
         lens = meta.get("LensModel", "")[:24]
         print(f"{name}  {klass:5s} {frame:8s} {n}/4  {lens:24s} f/{meta.get('FNumber','?')}"
               f" {meta.get('ExposureTime','?')}s ISO{meta.get('ISO','?')}  {note}"
               f"  ({time.time() - t0:.0f}s)", flush=True)
-    print("\nDONE", len(rows), "files")
+
+    # take selection: multiple shots of the same frame get ranked, best wins,
+    # repeatable-measure frames (flat/split) keep every clean take for
+    # averaging, bad takes are marked rejected with a reason
+    manifest = {}
+    for key in sorted({(r["lens"], r["klass"], r["frame"]) for r in rows}):
+        takes = [r for r in rows if (r["lens"], r["klass"], r["frame"]) == key]
+        clean = [r for r in takes if r["n"] >= 3 and not r["amb"]]
+        clean.sort(key=lambda r: (r["n"], r["sharp"]), reverse=True)
+        entry = []
+        for r in takes:
+            if r in clean:
+                if key[2] in ("flat", "split"):
+                    status = "use"  # average all clean takes
+                else:
+                    status = "best" if r is clean[0] else "backup"
+            else:
+                status = ("rejected: ambient light" if r["amb"]
+                          else f"rejected: {r['n']}/4 markers")
+            entry.append({"file": r["file"], "stem": os.path.basename(r["stem"]),
+                          "n": r["n"], "sharp": round(r["sharp"], 1),
+                          "status": status})
+        manifest["|".join(key)] = entry
+        if len(entry) > 1:
+            summ = ", ".join(f"{e['file']}={e['status'].split(':')[0]}" for e in entry)
+            print(f"  select {key[2]}-{key[1]} ({key[0][:18]}): {summ}", flush=True)
+    if skipped:
+        manifest["_unassigned"] = [{"file": n, "status": f"rejected: {r}"}
+                                   for n, r in skipped]
+    with open(os.path.join(outdir, "session.json"), "w") as f:
+        json.dump(manifest, f, indent=1)
+    print(f"\nDONE {len(rows) + len(skipped)} files; "
+          "take selection in processed/session.json")
 
 
 if __name__ == "__main__":
