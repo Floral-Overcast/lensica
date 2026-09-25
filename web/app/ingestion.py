@@ -9,6 +9,7 @@ Hard validation before anything touches disk: extension whitelist, size cap,
 and decode-or-reject (images via OpenCV/Pillow, raw via an exiftool format
 sniff). Nothing uploaded is ever executed.
 """
+import json
 import os
 import re
 import subprocess
@@ -85,6 +86,56 @@ def session_folder(sid):
         return None
     folder = os.path.join(UPLOAD_ROOT, sid)
     return folder if os.path.isdir(folder) else None
+
+
+# ---- session manifest + device photo ----
+# The device photo is a snapshot of the rig itself (taken with any other
+# device), weak verification + a public visual. Stored beside the capture files
+# as device-photo.<ext> and recorded in session.json so a profile built from
+# this session can use it as the entry thumbnail.
+MANIFEST = "session.json"
+PHOTO_EXT = {"jpg", "jpeg", "png", "tif", "tiff"}  # a real photo, not a raw file
+
+
+def read_manifest(folder):
+    path = os.path.join(folder, MANIFEST)
+    if os.path.isfile(path):
+        try:
+            return json.load(open(path))
+        except Exception:
+            pass
+    return {}
+
+
+def write_manifest(folder, **fields):
+    man = read_manifest(folder)
+    man.update({k: v for k, v in fields.items() if v is not None})
+    with open(os.path.join(folder, MANIFEST), "w") as f:
+        json.dump(man, f, indent=2)
+    return man
+
+
+def save_device_photo(folder, filename, data):
+    """Validate + store a rig snapshot as device-photo.<ext>. Returns
+    (ok, reason, stored_name). Photos only (no raw), same hard checks."""
+    ext = filename.lower().rsplit(".", 1)[-1] if "." in filename else ""
+    if ext not in PHOTO_EXT:
+        return False, "device photo must be jpg/png/tiff", None
+    ok, reason = validate(filename, data)
+    if not ok:
+        return False, reason, None
+    stored = "device-photo." + ext
+    with open(os.path.join(folder, stored), "wb") as out:
+        out.write(data)
+    return True, "ok", stored
+
+
+def device_photo_path(folder):
+    for ext in PHOTO_EXT:
+        p = os.path.join(folder, "device-photo." + ext)
+        if os.path.isfile(p):
+            return p
+    return None
 
 
 # ---- run_session streaming + parsing ----

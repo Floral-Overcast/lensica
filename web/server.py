@@ -135,10 +135,49 @@ def viewer_cut(label: str, fname: str):
                     headers={"Cache-Control": "no-store" if is_json else "max-age=86400"})
 
 
+# ---------------- device photo (rig snapshot) ----------------
+@app.post("/api/device-photo")
+async def api_device_photo(photo: UploadFile, session: str = "",
+                           body: str = "", lens: str = ""):
+    folder = ingestion.session_folder(session) if session else None
+    if folder:
+        sid = session
+    else:
+        sid, folder = ingestion.new_session()
+    data = await photo.read()
+    name = ingestion.safe_name(photo.filename)
+    ok, reason, stored = ingestion.save_device_photo(folder, name, data)
+    if not ok:
+        return JSONResponse({"error": reason}, status_code=400)
+    rig = " + ".join(x for x in (body.strip(), lens.strip()) if x)
+    ingestion.write_manifest(folder, device_photo=stored, name=rig,
+                             body=body.strip() or None, lens=lens.strip() or None)
+    return {"session": sid, "stored": stored}
+
+
+@app.get("/api/device-photo/{sid}")
+def get_device_photo(sid: str):
+    folder = ingestion.session_folder(sid)
+    if not folder:
+        return Response("not found", status_code=404)
+    path = ingestion.device_photo_path(folder)
+    if not path:
+        return Response("not found", status_code=404)
+    ext = path.rsplit(".", 1)[-1].lower()
+    media = "image/png" if ext == "png" else ("image/tiff" if ext in ("tif", "tiff") else "image/jpeg")
+    with open(path, "rb") as f:
+        data = f.read()
+    return Response(data, media_type=media, headers={"Cache-Control": "max-age=3600"})
+
+
 # ---------------- upload + ingestion ----------------
 @app.post("/api/upload")
-async def api_upload(files: list[UploadFile]):
-    sid, folder = ingestion.new_session()
+async def api_upload(files: list[UploadFile], session: str = ""):
+    folder = ingestion.session_folder(session) if session else None
+    if folder:
+        sid = session
+    else:
+        sid, folder = ingestion.new_session()
     accepted, rejected = [], []
     for f in files:
         data = await f.read()

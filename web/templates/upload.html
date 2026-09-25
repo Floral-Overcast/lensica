@@ -33,9 +33,13 @@
 {% block scripts %}
 <script>
 var files=[];
+// session id passed from the wizard's rig-photo step, so the capture files
+// join the same session the device photo was stored in.
+var SESSION=new URLSearchParams(location.search).get('session')||'';
 var drop=document.getElementById('drop'),input=document.getElementById('file');
 var go=document.getElementById('go'),picked=document.getElementById('picked');
 var verdicts=document.getElementById('verdicts'),status=document.getElementById('status');
+if(SESSION){picked.textContent='Rig photo attached — these files join that session.';}
 
 function setFiles(list){
   files=Array.prototype.slice.call(list);
@@ -66,7 +70,8 @@ go.addEventListener('click',function(){
   status.innerHTML='<span class="spin" style="display:inline-block;vertical-align:middle"></span> uploading…';
   var fd=new FormData();
   files.forEach(function(f){fd.append('files',f);});
-  fetch('/api/upload',{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(res){
+  var url='/api/upload'+(SESSION?('?session='+encodeURIComponent(SESSION)):'');
+  fetch(url,{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(res){
     (res.rejected||[]).forEach(function(rj){
       row({ok:false,frame:'rejected',markers:0,name:rj.name,hint:rj.reason});});
     if(!res.accepted||!res.accepted.length){status.textContent='no valid files accepted';go.disabled=false;return;}

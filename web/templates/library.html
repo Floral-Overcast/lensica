@@ -13,7 +13,8 @@
 {% else %}
 <div class="grid cols-2">
   {% for p in profiles %}
-  <a class="card lib-card" href="/profile/{{ p.id }}">
+  <a class="card lib-card{{ ' has-photo' if p.photo else '' }}" href="/profile/{{ p.id }}">
+    {% if p.photo %}<div class="rig-photo"><img src="{{ p.photo }}" alt="{{ p.name }}" loading="lazy"></div>{% endif %}
     <div class="lens">{{ p.model_disp if p.fixed else p.lens_disp }}</div>
     <div class="body">{{ 'fixed lens' if p.fixed else p.model_disp }}</div>
     <div class="kv">

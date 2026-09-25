@@ -12,6 +12,7 @@ import glob
 import hashlib
 import json
 import os
+import re
 import sys
 
 import numpy as np
@@ -41,6 +42,62 @@ ORDINAL = ["#6da7ec", "#2a78d6", "#8a5cd6"]  # center / mid / corner
 
 def existing_dirs():
     return [d for d in PROFILE_DIRS if os.path.isdir(d)]
+
+
+# ---------- rig photos (card + header visual) ----------
+# Curated photos are Matthew's own shots, committed under web/static/rigs/.
+# Keyed by the canonical rignames display name via its slug, so the card visual
+# tracks whatever name the UI shows. Filenames are abbreviated by hand, so the
+# map is explicit rather than a blind slugify(name)+".jpg". No entry (e.g. the
+# Samsung S25U) just falls back to the placeholder card look.
+RIGS_DIR = os.path.join(ROOT, "web", "static", "rigs")
+# Where wizard device-photo sessions land (mirrors ingestion.UPLOAD_ROOT).
+UPLOAD_ROOT = "/Sata/temp/lensica-uploads"
+
+CURATED_RIG_PHOTOS = {
+    "Sony A7C II + SG-image 35mm F2.2": "sony-a7c-ii-sg-image-35.jpg",
+    "Sony A7C II + TTArtisan 40mm F2": "sony-a7c-ii-ttartisan-40.jpg",
+    "Apple iPhone 5s": "apple-iphone-5s.jpg",
+    "Sony Xperia 1 IV": "sony-xperia-1-iv.jpg",
+    "Sony Cyber-shot DSC-T7": "sony-cyber-shot-dsc-t7.jpg",
+}
+
+
+def slugify(name):
+    return re.sub(r"[^a-z0-9]+", "-", (name or "").lower()).strip("-")
+
+
+# curated map keyed by slug so lookup is name-driven, not exact-string
+_CURATED_BY_SLUG = {slugify(k): v for k, v in CURATED_RIG_PHOTOS.items()}
+
+
+def _session_photo_for(name):
+    """Device photo from an upload session whose recorded rig matches this
+    profile name. Returns a servable URL (/api/device-photo/<sid>) or None.
+    Curated repo photos win, so this is only consulted as a fallback."""
+    want = slugify(name)
+    if not os.path.isdir(UPLOAD_ROOT):
+        return None
+    for sid in sorted(os.listdir(UPLOAD_ROOT)):
+        mpath = os.path.join(UPLOAD_ROOT, sid, "session.json")
+        if not os.path.isfile(mpath):
+            continue
+        try:
+            man = json.load(open(mpath))
+        except Exception:
+            continue
+        if man.get("device_photo") and slugify(man.get("name", "")) == want:
+            return "/api/device-photo/" + sid
+    return None
+
+
+def rig_photo(prof):
+    """Card/header image URL for a profile, or None (placeholder look).
+    Curated repo photo wins; else a session-supplied device photo."""
+    fname = _CURATED_BY_SLUG.get(slugify(prof.get("name", "")))
+    if fname and os.path.isfile(os.path.join(RIGS_DIR, fname)):
+        return "/static/rigs/" + fname
+    return _session_photo_for(prof.get("name", ""))
 
 
 def profile_id(model, lens):
@@ -80,6 +137,8 @@ def list_profiles():
         g["classes"] = sorted(g["classes"])
         out.append(g)
     out.sort(key=lambda g: (g["model"], g["lens"]))
+    for g in out:
+        g["photo"] = rig_photo(g)
     return out
 
 

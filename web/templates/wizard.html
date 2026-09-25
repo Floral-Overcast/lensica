@@ -12,6 +12,7 @@
   <span class="step-pill" data-step="2">3 · Camera setup</span>
   <span class="step-pill" data-step="3">4 · Open target on display</span>
   <span class="step-pill" data-step="4">5 · Shot list</span>
+  <span class="step-pill" data-step="5">6 · Rig photo</span>
 </div>
 
 <!-- step 0 -->
@@ -89,7 +90,27 @@
   </div>
   <p class="note" style="margin-top:20px">Then a darkness check: one exposure with the
     display showing pure black. Anything visible is light leak — fix the room. When
-    you're done, <a href="/upload">upload the session &rarr;</a></p>
+    you're done, add a photo of your rig in the last step, then upload.</p>
+</section>
+
+<!-- step 5 -->
+<section class="wz card" data-panel="5" hidden>
+  <h2>Add a photo of your rig</h2>
+  <p class="note">One photo of the actual camera or phone you just tested, taken with any
+    other device. It appears on the public entry so people can see what was measured, and
+    gives us a weak sanity check on the gear. Encouraged, not required — you can skip it.</p>
+  <div class="drop" id="devdrop">
+    <p style="font-size:1.05rem;color:var(--text)"><b>Drop a photo</b> or click to choose</p>
+    <p class="note" style="margin:0">jpg · jpeg · png · tif</p>
+    <input type="file" id="devfile" accept=".jpg,.jpeg,.png,.tif,.tiff" hidden>
+  </div>
+  <div id="devpreview" style="margin-top:12px"></div>
+  <div style="margin-top:14px">
+    <button class="btn primary" id="devsave" type="button" disabled>Save rig photo</button>
+    <span id="devstatus" class="dim" style="margin-left:12px"></span>
+  </div>
+  <p class="note" style="margin-top:20px">When you're ready,
+    <a id="uploadlink" href="/upload">upload the session &rarr;</a></p>
 </section>
 
 <div style="display:flex;gap:12px;margin-top:22px">
@@ -145,6 +166,43 @@ var SHOTS=[
   document.getElementById('prev').onclick=function(){if(step>0){step--;render();}};
   pills.forEach(function(p){p.onclick=function(){step=+p.dataset.step;render();};});
   render();
+
+  // ---- rig photo step ----
+  var devdrop=document.getElementById('devdrop'),devfile=document.getElementById('devfile');
+  var devsave=document.getElementById('devsave'),devstatus=document.getElementById('devstatus');
+  var devpreview=document.getElementById('devpreview'),uploadlink=document.getElementById('uploadlink');
+  var devSession='';
+  function pickDev(f){
+    if(!f){return;}
+    devsave.disabled=false;devstatus.textContent='';
+    devpreview.innerHTML='';
+    var img=document.createElement('img');
+    img.style.cssText='max-width:180px;border-radius:10px;border:1px solid var(--line)';
+    img.src=URL.createObjectURL(f);devpreview.appendChild(img);
+    devsave._file=f;
+  }
+  devdrop.addEventListener('click',function(){devfile.click();});
+  devfile.addEventListener('change',function(){pickDev(devfile.files[0]);});
+  ['dragenter','dragover'].forEach(function(e){devdrop.addEventListener(e,function(ev){
+    ev.preventDefault();devdrop.classList.add('hot');});});
+  ['dragleave','drop'].forEach(function(e){devdrop.addEventListener(e,function(ev){
+    ev.preventDefault();devdrop.classList.remove('hot');});});
+  devdrop.addEventListener('drop',function(ev){pickDev(ev.dataTransfer.files[0]);});
+  devsave.addEventListener('click',function(){
+    if(!devsave._file){return;}
+    devsave.disabled=true;devstatus.textContent='saving…';
+    var fd=new FormData();fd.append('photo',devsave._file);
+    var q='?body='+encodeURIComponent(document.getElementById('body').value||'')+
+          '&lens='+encodeURIComponent(document.getElementById('lens').value||'')+
+          (devSession?('&session='+devSession):'');
+    fetch('/api/device-photo'+q,{method:'POST',body:fd})
+      .then(function(r){return r.json();}).then(function(res){
+        if(res.error){devstatus.textContent=res.error;devsave.disabled=false;return;}
+        devSession=res.session;
+        devstatus.textContent='saved — it will show on the entry';
+        uploadlink.href='/upload?session='+devSession;
+      }).catch(function(e){devstatus.textContent='error: '+e;devsave.disabled=false;});
+  });
 })();
 </script>
 {% endblock %}
