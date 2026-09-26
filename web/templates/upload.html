@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Lensica — upload a session{% endblock %}
+{% block title %}Lensica · upload a session{% endblock %}
 {% block wrapclass %}narrow{% endblock %}
 {% block content %}
 <h1>Upload a session</h1>
 <p class="note">Drop the whole session folder's files (RAW and/or JPEG). Each file is
-  validated — extension whitelist, 80&nbsp;MB cap, decode-or-reject — then registered and
+  validated (extension whitelist, 80&nbsp;MB cap, decode-or-reject), then registered and
   scored. Test-chart uploads are kept so future methodology improvements can re-process
   them. You get a per-shot verdict: frame identified, markers found, pass/fail, reshoot hint.</p>
 
@@ -39,7 +39,7 @@ var SESSION=new URLSearchParams(location.search).get('session')||'';
 var drop=document.getElementById('drop'),input=document.getElementById('file');
 var go=document.getElementById('go'),picked=document.getElementById('picked');
 var verdicts=document.getElementById('verdicts'),status=document.getElementById('status');
-if(SESSION){picked.textContent='Rig photo attached — these files join that session.';}
+if(SESSION){picked.textContent='Rig photo attached, these files join that session.';}
 
 function setFiles(list){
   files=Array.prototype.slice.call(list);

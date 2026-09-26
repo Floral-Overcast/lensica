@@ -12,6 +12,14 @@ Crowd-sourced lens/camera "look" measurement library + look-recreation filters. 
 - **Public target set excludes the organic frame** until a procedural/licensed replacement exists (done.png is copyrighted collage; see Known gaps).
 - The user-facing flow: step-by-step test wizard → QR code opens the target viewer on the display device → upload session → instant per-shot verdicts (frame ID, markers found, reshoot hints) → profile page (report.py-style charts) → library/compare + look-transfer demo.
 
+## Copy style (applies to everything a visitor reads)
+Templates, docs (README/PROTOCOL), badge/status strings, section titles: all of it.
+- **No em-dashes (U+2014).** Restructure instead: comma, colon, period, or parentheses. A plain hyphen with spaces " - " is fine sparingly. Title separators use " · " (e.g. "Lensica · library"). Range hyphens (f/2-f/8, 2005-2026) are plain hyphens, always fine.
+- **Plain and descriptive, never salesy.** Copy describes what the thing does; it doesn't perform or sell.
+- **No "it's not X, it's Y" contrastive snaps** and no drama fragments like "X or invalid". State the requirement plainly.
+- **No insight-announcements** ("here's the thing", "that's the whole point", "the reality is").
+- Write like a person who did the thing giving practical advice. When unsure, the smallest edit that removes the tell wins; keep Matthew's register, don't rewrite voice wholesale.
+
 ## Layout
 - `source/` (gitignored) — `done.png`, Matthew's 17670x32080 master noise image. THE origin artifact, do not modify; sha256 in `target/master/master-square-v1.json`.
 - `analysis/score_windows.py` — one-time search that cut the best 6144x6144 square out of done.png. Re-running it is only valid for a new target version.

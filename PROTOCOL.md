@@ -1,4 +1,4 @@
-# Lensica capture protocol — Target v1 (Phase 0, internal)
+# Lensica capture protocol: Target v1 (Phase 0, internal)
 
 One session = one (body, lens, display) triple. ~15 minutes once set up.
 The differential trick: shoot two lenses in ONE session without touching the

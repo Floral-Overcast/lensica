@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Lensica — try a look{% endblock %}
+{% block title %}Lensica · try a look{% endblock %}
 {% block wrapclass %}narrow{% endblock %}
 {% block content %}
 <h1>Try a look</h1>
 <p class="note">Upload one of your own photos and preview a measured rig's colour rendering
-  on it. Your photo is processed in memory and discarded — nothing is stored. If your
+  on it. Your photo is processed in memory and discarded, nothing is stored. If your
   photo came from a profiled camera, it's a true A&rarr;B mapping; otherwise it's an
   approximate preview.</p>
 
 {% if not looks %}
-<div class="card"><p class="note">No looks available — the sample sessions needed to learn
+<div class="card"><p class="note">No looks available. The sample sessions needed to learn
   a colour mapping aren't present on this host.</p></div>
 {% else %}
 <div class="field" style="max-width:340px">
@@ -86,7 +86,7 @@
         if(j.profiled){
           b.innerHTML='<span class="badge ok">true mapping · source '+j.model+' is profiled</span>';
         }else{
-          b.innerHTML='<span class="badge warn">approximate — source camera ('+j.model+
+          b.innerHTML='<span class="badge warn">approximate, source camera ('+j.model+
             ') not profiled; assumed neutral sRGB</span>';
         }
         document.getElementById('result').hidden=false;

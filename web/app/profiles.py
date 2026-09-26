@@ -272,7 +272,7 @@ def render_sections(prof):
         chart = svg_chart(series, 0.5, 1.0, "cycles / stimulus px", "MTF")
         tile_html = "".join("<div class='tile'><div class='v'>%.3f</div>"
                             "<div class='k'>MTF50 %s</div></div>" % (v, n) for n, v in tiles)
-        sections.append({"title": "Resolution — slanted-edge MTF", "klass": klass,
+        sections.append({"title": "Resolution: slanted-edge MTF", "klass": klass,
                          "note": "Higher curve = more contrast kept at that detail "
                          "frequency. MTF50 is the practical sharpness number; the "
                          "center-to-corner spread is the lens's field character.",
@@ -301,11 +301,10 @@ def render_sections(prof):
                            "color": CH[ch_name.lower()], "dash": dash,
                            "x": xs, "y": [ramp[i][comp] for i in xs]})
     if series:
-        sections.append({"title": "Tone response — per-channel transfer",
+        sections.append({"title": "Tone response: per-channel transfer",
                          "note": "Stimulus level in, measured level out (tone-frame "
                          "ramps). Raw solid, camera-JPEG dashed; the gap is the body's "
-                         "processing. Raw is linear-decoded, so it looks dark — that "
-                         "linearity is the point.",
+                         "processing. Raw is linear-decoded, so it looks dark by design.",
                          "html": "<div class='card tight'>%s</div>"
                          % svg_chart(series, 255, 255, "stimulus level", "measured level",
                                      yfmt="%.0f", xfmt="%.0f")})
@@ -320,7 +319,7 @@ def render_sections(prof):
     if profs:
         series = [{"name": "illumination", "color": SLOTS[0], "x": xs,
                    "y": np.mean(profs, axis=0).tolist()}]
-        sections.append({"title": "Vignette — illumination falloff",
+        sections.append({"title": "Vignette: illumination falloff",
                          "note": "Relative to center. Includes display non-uniformity, "
                          "identical for every lens on the same display.",
                          "html": "<div class='card tight' style='max-width:640px'>%s</div>"
@@ -353,7 +352,7 @@ def render_sections(prof):
         if psf_html:
             break
     if psf_html:
-        sections.append({"title": "PSF — point-light kernels",
+        sections.append({"title": "PSF: point-light kernels",
                          "note": "Actual photographed point sources (gamma-lifted, 4x "
                          "nearest-neighbor). Shape and tails are the bokeh/glow signature.",
                          "html": "<div class='card tight'><div class='psf'>%s</div></div>" % psf_html})

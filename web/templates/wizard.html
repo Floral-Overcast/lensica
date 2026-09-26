@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Lensica — test wizard{% endblock %}
+{% block title %}Lensica · test wizard{% endblock %}
 {% block wrapclass %}narrow{% endblock %}
 {% block content %}
 <h1>Run a test</h1>
@@ -25,15 +25,15 @@
   <div class="field"><label>Apple display</label>
     <select id="display">
       {% for key, wh in displays %}
-      <option value="{{ key }}">{{ key }} — {{ wh[0] }}×{{ wh[1] }}</option>
+      <option value="{{ key }}">{{ key }} · {{ wh[0] }}×{{ wh[1] }}</option>
       {% endfor %}
     </select>
     <p class="note">Any Apple display works, an iPhone screen is fine. It's about mass
       production: every display is calibrated differently, but Apple mass-produces tightly
       calibrated panels, so it's the closest thing to everyone photographing the exact
       same picture.</p></div>
-  <p class="note">Shoot RAW (add camera-JPEG too if you want the body's processing look —
-    it's a separate, first-class measurement class). No tripod needed — handheld is fine.
+  <p class="note">Shoot RAW (add camera-JPEG too if you want the body's processing look,
+    it's a separate, first-class measurement class). No tripod needed, handheld is fine.
     Registration warps every shot back onto the target pixel-for-pixel, so framing and tilt
     don't matter. Just take your clearest shot.</p>
   <div class="tip-focus"><b>Treat it like an event.</b> Plan every body + lens combo you
@@ -48,14 +48,14 @@
   <ol>
     <li><b>True Tone OFF, Night Shift OFF, auto-brightness OFF</b> (macOS, iOS, iPadOS
       alike). Measured, not theoretical: True Tone shifted a display white ~6% redder at
-      the sensor and drifts with ambient light — it silently breaks comparability.</li>
+      the sensor and drifts with ambient light, which silently breaks comparability.</li>
     <li>Brightness to a fixed notch, roughly 2/3. Note the notch. Never change it mid-session.</li>
     <li>Show each frame at exactly 1:1 native pixels, fullscreen, no UI. The viewer in
       step 4 handles this.</li>
     <li>Let the panel warm up ~15 min before the first frame (backlight drift).</li>
   </ol>
   <div class="tip-focus"><b>Dark room.</b> No windows leaking, no LEDs. Tape over camera
-    and monitor status lights. Wear dark clothes — you reflect.</div>
+    and monitor status lights. Wear dark clothes; you reflect.</div>
 </section>
 
 <!-- step 2 -->
@@ -65,16 +65,16 @@
     <li>RAW (+JPEG). Base ISO. White balance <b>LOCKED</b> to any fixed preset (note which).
       Never auto-WB. Manual exposure. Handheld, so leave IBIS/OIS on.</li>
     <li><b>Aperture: wide open (lowest f-number).</b> That's where a lens shows its
-      character — vignette, glare, soft corners, and especially the bokeh you get on the
+      character: vignette, glare, soft corners, and especially the bokeh you get on the
       points frame. By f/8 most lenses converge on their best behaviour and hide it. Want a
       stopped-down profile too? That's a second session, not a stricter first one.
       Phones and fixed-lens compacts: skip this, the camera decides.</li>
     <li>Focus by magnified live view on a corner marker, then switch to MF and don't touch.</li>
-    <li>Get all four corner markers in the frame with a little margin — that's what
+    <li>Get all four corner markers in the frame with a little margin. That's what
       registration needs. Framing and tilt don't matter beyond that; closer (more pixels
       per stimulus pixel) is more confidence.</li>
     <li>On the tone frame, expose so the 255 white block sits just under clipping
-      (blinkies barely off). Bracket freely from there — see the shot list.</li>
+      (blinkies barely off). Bracket freely from there (see the shot list).</li>
     <li>Keep shutter ≥ 1/30s (OLED/PWM). In a dark room that's easy handheld.</li>
   </ul>
 </section>
@@ -93,7 +93,7 @@
 <!-- step 4 -->
 <section class="wz card" data-panel="4" hidden>
   <h2>Shot list <span class="dim" id="rig" style="font-size:.9rem"></span></h2>
-  <p class="note">Per lens. Tick as you go. <b>Bracket freely</b> — take a bunch of shots
+  <p class="note">Per lens. Tick as you go. <b>Bracket freely</b>: take a bunch of shots
     per frame at different shutter speeds until the set feels repeatable and complete.
     Ingestion keeps the best take per frame automatically and tells you what it rejected,
     so multiple takes are good, not a mistake.</p>
@@ -105,7 +105,7 @@
     without refocusing. The display distance is unchanged, so the lock is exact.
   </div>
   <p class="note" style="margin-top:20px">Then a darkness check: one exposure with the
-    display showing pure black. Anything visible is light leak — fix the room. When
+    display showing pure black. Anything visible is light leak, so fix the room. When
     you're done, add a photo of your rig in the last step, then upload.</p>
 </section>
 
@@ -114,7 +114,7 @@
   <h2>Add a photo of your rig</h2>
   <p class="note">One photo of the actual camera or phone you just tested, taken with any
     other device. It appears on the public entry so people can see what was measured, and
-    gives us a weak sanity check on the gear. Encouraged, not required — you can skip it.</p>
+    gives us a weak sanity check on the gear. Encouraged, not required. You can skip it.</p>
   <div class="drop" id="devdrop">
     <p style="font-size:1.05rem;color:var(--text)"><b>Drop a photo</b> or click to choose</p>
     <p class="note" style="margin:0">jpg · jpeg · png · tif</p>
@@ -145,7 +145,7 @@ var SHOTS=[
  {f:'spectrum',ap:'wide open',fo:'corner marker',n:'colour cube coverage'},
  {f:'skin',ap:'wide open',fo:'corner marker',n:'skin-tone rendering'},
  {f:'edges',ap:'wide open',fo:'corner marker',n:'sharpest focus, no defocus'},
- {f:'points',ap:'wide open',fo:'corner marker',n:'in-focus PSF — use the focus-lock trick'}
+ {f:'points',ap:'wide open',fo:'corner marker',n:'in-focus PSF, use the focus-lock trick'}
 ];
 (function(){
   var sl=document.getElementById('shotlist');
@@ -213,7 +213,7 @@ var SHOTS=[
       .then(function(r){return r.json();}).then(function(res){
         if(res.error){devstatus.textContent=res.error;devsave.disabled=false;return;}
         devSession=res.session;
-        devstatus.textContent='saved — it will show on the entry';
+        devstatus.textContent='saved, it will show on the entry';
         uploadlink.href='/upload?session='+devSession;
       }).catch(function(e){devstatus.textContent='error: '+e;devsave.disabled=false;});
   });
