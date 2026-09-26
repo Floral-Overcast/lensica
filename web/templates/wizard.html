@@ -33,8 +33,13 @@
       calibrated panels, so it's the closest thing to everyone photographing the exact
       same picture.</p></div>
   <p class="note">Shoot RAW (add camera-JPEG too if you want the body's processing look —
-    it's a separate, first-class measurement class). Sturdy tripod, 2s timer or remote,
-    never a finger-press.</p>
+    it's a separate, first-class measurement class). No tripod needed — handheld is fine.
+    Registration warps every shot back onto the target pixel-for-pixel, so framing and tilt
+    don't matter. Just take your clearest shot.</p>
+  <div class="tip-focus"><b>Treat it like an event.</b> Plan every body + lens combo you
+    want to measure, gather them all, then take one windowless room, kill the lights, put
+    an Apple device on, and run the combos back to back. One evening gets you several
+    profiles.</div>
 </section>
 
 <!-- step 1 -->
@@ -58,14 +63,19 @@
   <h2>Camera setup</h2>
   <ul>
     <li>RAW (+JPEG). Base ISO. White balance <b>LOCKED</b> to any fixed preset (note which).
-      Never auto-WB. Manual exposure. IBIS/OIS OFF (tripod).</li>
-    <li>Focus by magnified live view on a corner fiducial, then switch to MF and don't touch.</li>
-    <li>Square to the screen (bubble level), centered, all four corner fiducials well
-      inside the frame with ~5% margin. Closer = more pixels per stimulus pixel = more
-      confidence.</li>
+      Never auto-WB. Manual exposure. Handheld, so leave IBIS/OIS on.</li>
+    <li><b>Aperture: wide open (lowest f-number).</b> That's where a lens shows its
+      character — vignette, glare, soft corners, and especially the bokeh you get on the
+      points frame. By f/8 most lenses converge on their best behaviour and hide it. Want a
+      stopped-down profile too? That's a second session, not a stricter first one.
+      Phones and fixed-lens compacts: skip this, the camera decides.</li>
+    <li>Focus by magnified live view on a corner marker, then switch to MF and don't touch.</li>
+    <li>Get all four corner markers in the frame with a little margin — that's what
+      registration needs. Framing and tilt don't matter beyond that; closer (more pixels
+      per stimulus pixel) is more confidence.</li>
     <li>On the tone frame, expose so the 255 white block sits just under clipping
-      (blinkies barely off). Reuse that exposure for every colour frame in the session.</li>
-    <li>Keep shutter ≥ 1/30s (OLED/PWM). On a tripod in the dark that's natural.</li>
+      (blinkies barely off). Bracket freely from there — see the shot list.</li>
+    <li>Keep shutter ≥ 1/30s (OLED/PWM). In a dark room that's easy handheld.</li>
   </ul>
 </section>
 
@@ -83,8 +93,10 @@
 <!-- step 4 -->
 <section class="wz card" data-panel="4" hidden>
   <h2>Shot list <span class="dim" id="rig" style="font-size:.9rem"></span></h2>
-  <p class="note">Per lens. Same tripod position; re-frame as needed if you swap lenses.
-    Tick as you go.</p>
+  <p class="note">Per lens. Tick as you go. <b>Bracket freely</b> — take a bunch of shots
+    per frame at different shutter speeds until the set feels repeatable and complete.
+    Ingestion keeps the best take per frame automatically and tells you what it rejected,
+    so multiple takes are good, not a mistake.</p>
   <ol class="shotlist" id="shotlist"></ol>
   <div class="tip-focus" id="focustip" style="display:none">
     <b>Focus-lock trick for the points frame.</b> AF hunts on a black field with sparse
@@ -126,16 +138,14 @@
 {% block scripts %}
 <script>
 var SHOTS=[
- {f:'tone',ap:'f/5.6–f/8',fo:'screen',n:'sets session exposure'},
- {f:'flat',ap:'same',fo:'screen',n:'vignetting + display uniformity'},
- {f:'split',ap:'same',fo:'screen',n:'veiling glare: white half spilling into black'},
- {f:'organic',ap:'same',fo:'screen',n:'the big one; optional 2nd shot at +1EV'},
- {f:'spectrum',ap:'same',fo:'screen',n:'colour cube coverage'},
- {f:'skin',ap:'same',fo:'screen',n:'skin-tone rendering'},
- {f:'edges',ap:'same',fo:'screen',n:'sharpest focus, NO defocus allowed'},
- {f:'points',ap:'wide open',fo:'screen',n:'in-focus PSF — use the focus-lock trick'},
- {f:'points',ap:'wide open',fo:'racked to MFD',n:'bokeh balls (defocused)'},
- {f:'points',ap:'2 stops down',fo:'racked to MFD',n:'aperture-shape bokeh'}
+ {f:'tone',ap:'wide open',fo:'corner marker',n:'sets session exposure'},
+ {f:'flat',ap:'wide open',fo:'corner marker',n:'vignetting + display uniformity'},
+ {f:'split',ap:'wide open',fo:'corner marker',n:'veiling glare: white half spilling into black'},
+ {f:'organic',ap:'wide open',fo:'corner marker',n:'the big one'},
+ {f:'spectrum',ap:'wide open',fo:'corner marker',n:'colour cube coverage'},
+ {f:'skin',ap:'wide open',fo:'corner marker',n:'skin-tone rendering'},
+ {f:'edges',ap:'wide open',fo:'corner marker',n:'sharpest focus, no defocus'},
+ {f:'points',ap:'wide open',fo:'corner marker',n:'in-focus PSF — use the focus-lock trick'}
 ];
 (function(){
   var sl=document.getElementById('shotlist');
