@@ -100,6 +100,9 @@ html { font-size: 81.25%; }
 /* ---------- base ---------- */
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+/* backstop: nothing should paint wider than the viewport (real fix is the nav
+   block below; this just guards against any future stray full-bleed element). */
+html, body { overflow-x: clip; }
 body {
   font-family: var(--font);
   color: var(--body);
@@ -362,4 +365,20 @@ table.data td, table.data th { border: 1px solid var(--hairline); padding: .12re
   .btn.ghost { background: transparent; }
   .drop { background: var(--muted); }
   .drop.hot { background: var(--tint); }
+}
+
+/* ---------- phone: keep the nav on one line, keep the try preview roomy ----------
+ * The nav is a single non-wrapping flex row; at ~360px the brand + links + toggle
+ * are wider than the viewport, which is what pushed the whole page past the screen
+ * edge. Tighten the gap and type, drop the toggle's word (icon stays), and it fits. */
+@media (max-width: 480px) {
+  .wrap { padding: 0 1rem; }
+  .nav { gap: .55rem; height: 3rem; }
+  .brand { font-size: 1rem; gap: .4rem; }
+  .brand .dot { width: .6rem; height: .6rem; }
+  .nav a.navlink { font-size: .82rem; }
+  .theme-toggle { padding: .4rem .5rem; }
+  .theme-toggle #themeLabel { display: none; }
+  /* try-a-look preview: 16/10 crops a phone photo to a thin strip; go portrait */
+  .narrow .ba { aspect-ratio: 4 / 5; }
 }

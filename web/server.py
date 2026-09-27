@@ -51,7 +51,7 @@ def _asset_ver():
 
 templates.env.globals["asset_ver"] = _asset_ver()
 
-NAV = [("/", "Home"), ("/wizard", "Test"), ("/viewer", "Viewer"),
+NAV = [("/", "Home"), ("/wizard", "Test"),
        ("/upload", "Upload"), ("/library", "Library"), ("/try", "Try a look")]
 
 
