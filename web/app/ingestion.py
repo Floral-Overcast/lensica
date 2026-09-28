@@ -19,7 +19,7 @@ import cv2
 import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-UPLOAD_ROOT = "/Sata/temp/lensica-uploads"
+UPLOAD_ROOT = "/srv/lensica/lensica-uploads"
 
 ALLOWED = {"jpg", "jpeg", "png", "tif", "tiff", "dng", "arw"}
 RAW_EXT = {"dng", "arw"}

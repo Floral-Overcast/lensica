@@ -25,12 +25,12 @@ import rignames  # noqa: E402  (canonical device display names; single source of
 
 # Where profiled sessions live. Real captures at stimulus 1640x2360 (per BRIEF).
 PROFILE_DIRS = [
-    "/Sata/temp/A7cii2/processed",
-    "/Sata/temp/new sets/processed",
-    "/Sata/temp/xperia/processed",
-    "/Sata/temp/s25u-ipad/processed",
-    "/Sata/temp/Iphone 5s/processed",
-    "/Sata/temp/cybershot DSC-T7/processed",
+    "/srv/lensica/A7cii2/processed",
+    "/srv/lensica/new sets/processed",
+    "/srv/lensica/xperia/processed",
+    "/srv/lensica/s25u-ipad/processed",
+    "/srv/lensica/Iphone 5s/processed",
+    "/srv/lensica/cybershot DSC-T7/processed",
 ]
 STIMULUS = (1640, 2360)
 
@@ -52,7 +52,7 @@ def existing_dirs():
 # Samsung S25U) just falls back to the placeholder card look.
 RIGS_DIR = os.path.join(ROOT, "web", "static", "rigs")
 # Where wizard device-photo sessions land (mirrors ingestion.UPLOAD_ROOT).
-UPLOAD_ROOT = "/Sata/temp/lensica-uploads"
+UPLOAD_ROOT = "/srv/lensica/lensica-uploads"
 
 CURATED_RIG_PHOTOS = {
     "Sony A7C II + SG-image 35mm F2.2": "sony-a7c-ii-sg-image-35.jpg",

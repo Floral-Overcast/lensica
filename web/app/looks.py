@@ -30,13 +30,13 @@ STIMULUS = (1640, 2360)
 LOOKS = [
     {"id": "xperia", "name": "Sony Xperia 1 IV rendering",
      "desc": "Sony's phone colour science and tone (learned A7C II → Xperia 1 IV).",
-     "a_dir": "/Sata/temp/A7cii2/processed", "a_match": "SG-image",
-     "b_dir": "/Sata/temp/xperia/processed", "b_match": "XQ-CT54",
+     "a_dir": "/srv/lensica/A7cii2/processed", "a_match": "SG-image",
+     "b_dir": "/srv/lensica/xperia/processed", "b_match": "XQ-CT54",
      "a_model": "ILCE-7CM2"},
     {"id": "a7cii", "name": "Sony A7C II rendering",
      "desc": "Full-frame body look (learned Xperia 1 IV → A7C II).",
-     "a_dir": "/Sata/temp/xperia/processed", "a_match": "XQ-CT54",
-     "b_dir": "/Sata/temp/A7cii2/processed", "b_match": "SG-image",
+     "a_dir": "/srv/lensica/xperia/processed", "a_match": "XQ-CT54",
+     "b_dir": "/srv/lensica/A7cii2/processed", "b_match": "SG-image",
      "a_model": "XQ-CT54"},
 ]
 

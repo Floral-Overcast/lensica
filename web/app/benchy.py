@@ -1,7 +1,7 @@
 """Benchy looks demo: the CC0 3DBenchy photo rendered through each profiled
 rig's measured colour mapping.
 
-Method mirrors /Sata/temp/benchy_looks.py (Matthew's reference): an affine
+Method mirrors /srv/lensica/benchy_looks.py (Matthew's reference): an affine
 colour matrix fitted from the rig's spectrum-frame capture vs the known sRGB
 stimulus we generated, then gain-aligned to the source so what you see is
 colour and tone shape, not exposure. Matrix-only for now; tone / sharpening
@@ -25,7 +25,7 @@ import lookmatch  # noqa: E402
 sys.path.insert(0, os.path.join(ROOT, "extract"))
 import rignames  # noqa: E402  (canonical device display names)
 
-SRC = "/Sata/temp/benchy-v45.jpg"
+SRC = "/srv/lensica/benchy-v45.jpg"
 CACHE = os.path.join(ROOT, "web", "cuts", "benchy")
 STIM_W, STIM_H = 1640, 2360      # stimulus size the rigs were captured against
 MAXPX = 1400                     # serve ~1400px jpegs
@@ -39,16 +39,16 @@ NOTE = ("These are measured colour mappings (matrix-only for now; tone and "
 # Model/LensModel we feed rignames for the canonical display name. Order is the
 # order shown in the switcher.
 RIGS = [
-    {"slug": "a7cii-sg", "dir": "/Sata/temp/A7cii2/processed",
+    {"slug": "a7cii-sg", "dir": "/srv/lensica/A7cii2/processed",
      "match": "SG-image", "model": "ILCE-7CM2", "lens": "SG-image 35mm F2.2 FE"},
-    {"slug": "s25u", "dir": "/Sata/temp/s25u-ipad/processed",
+    {"slug": "s25u", "dir": "/srv/lensica/s25u-ipad/processed",
      "match": "Galaxy S25", "model": "Galaxy S25 Ultra", "lens": ""},
-    {"slug": "xperia", "dir": "/Sata/temp/xperia/processed",
+    {"slug": "xperia", "dir": "/srv/lensica/xperia/processed",
      "match": "XQ-CT54", "model": "XQ-CT54", "lens": ""},
-    {"slug": "iphone5s", "dir": "/Sata/temp/Iphone 5s/processed",
+    {"slug": "iphone5s", "dir": "/srv/lensica/Iphone 5s/processed",
      "match": "iPhone 5s", "model": "iPhone 5s",
      "lens": "iPhone 5s back camera 4.15mm f/2.2"},
-    {"slug": "dsct7", "dir": "/Sata/temp/cybershot DSC-T7/processed",
+    {"slug": "dsct7", "dir": "/srv/lensica/cybershot DSC-T7/processed",
      "match": "DSC-T7", "model": "DSC-T7", "lens": ""},
 ]
 
