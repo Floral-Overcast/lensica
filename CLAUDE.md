@@ -35,6 +35,7 @@ Templates, docs (README/PROTOCOL), badge/status strings, section titles: all of 
 - `python3 tools/cut.py --display macbook-pro-14 --out cuts/`
 - Viewer: `tools/serve.py` (runs as a systemd service on the storage host). Open it on the display device itself; it auto-detects native res, generates + caches the cut, tap cycles frames. iOS: Add to Home Screen for fullscreen.
 - `python3 extract/selftest.py` (pipeline smoke test, must PASS)
+- `python3 tools/lut_ingest.py --seed` - export our measured looks (web/app/looks.py affine model, identity 33^3 grid) to CC0 `.cube` files under `/srv/lensica/luts/` (manifest.json + previews/, no DB), served by the `/luts` page. `--cube FILE --id .. --name ..` is the community ingest path. Each export is validated: cube trilinear vs model on a held-out photo, delta recorded in the manifest, over-threshold exports flagged and withheld.
 - Deps: Pillow, numpy, opencv-python-headless, rawpy + exiftool for capture ingest
 
 ## Iron rules (the whole product depends on these)
