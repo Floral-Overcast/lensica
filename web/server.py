@@ -24,7 +24,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 
-from web.app import benchy, ingestion, looks, profiles, viewer  # noqa: E402
+from web.app import benchy, ingestion, looks, lutlib, profiles, viewer  # noqa: E402
 
 app = FastAPI(title="Lensica")
 app.mount("/static", StaticFiles(directory=os.path.join(HERE, "static")), name="static")
@@ -51,8 +51,8 @@ def _asset_ver():
 
 templates.env.globals["asset_ver"] = _asset_ver()
 
-NAV = [("/", "Home"), ("/wizard", "Test"),
-       ("/upload", "Upload"), ("/library", "Library"), ("/try", "Try a look")]
+NAV = [("/", "Home"), ("/wizard", "Test"), ("/upload", "Upload"),
+       ("/library", "Library"), ("/luts", "LUTs"), ("/try", "Try")]
 
 
 def page(request, name, **ctx):
@@ -109,6 +109,33 @@ def profile(request: Request, pid: str):
 @app.get("/try", response_class=HTMLResponse)
 def try_page(request: Request):
     return page(request, "try.html", looks=looks.list_looks())
+
+
+@app.get("/luts", response_class=HTMLResponse)
+def luts_page(request: Request):
+    return page(request, "luts.html", luts=lutlib.list_luts())
+
+
+@app.get("/luts/download/{lut_id}")
+def lut_download(lut_id: str):
+    path = lutlib.cube_path(lut_id)
+    if not path:
+        return Response("not found", status_code=404)
+    with open(path, "rb") as f:
+        data = f.read()
+    return Response(data, media_type="text/plain; charset=utf-8", headers={
+        "Content-Disposition": f'attachment; filename="{lutlib.cube_filename(lut_id)}"'})
+
+
+@app.get("/luts/preview/{fname}")
+def lut_preview(fname: str):
+    path = lutlib.preview_path(fname)
+    if not path:
+        return Response("not found", status_code=404)
+    with open(path, "rb") as f:
+        data = f.read()
+    return Response(data, media_type="image/jpeg",
+                    headers={"Cache-Control": "max-age=86400"})
 
 
 # ---------------- QR ----------------

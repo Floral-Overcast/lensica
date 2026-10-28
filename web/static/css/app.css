@@ -382,3 +382,24 @@ table.data td, table.data th { border: 1px solid var(--hairline); padding: .12re
   /* try-a-look preview: 16/10 crops a phone photo to a thin strip; go portrait */
   .narrow .ba { aspect-ratio: 4 / 5; }
 }
+
+/* ---------- LUT library cards ---------- */
+.lut-card { display: flex; flex-direction: column; }
+.lut-head { display: flex; align-items: flex-start; justify-content: space-between;
+  gap: .75rem; flex-wrap: wrap; }
+.lut-name { font-weight: 600; font-size: 1.05rem; }
+.lut-head .kv { display: flex; gap: .4rem; flex-wrap: wrap; }
+a.badge { text-decoration: none; }
+.lut-rig { font-family: var(--font-mono); font-size: .82rem; color: var(--body);
+  margin-top: .35rem; }
+.lut-strip { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem;
+  margin: .9rem 0 .2rem; }
+.lut-strip figure { margin: 0; }
+.lut-strip img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover;
+  border-radius: var(--radius); border: 1px solid var(--hairline); display: block; }
+.lut-strip figcaption { font-size: .74rem; color: var(--dim); margin-top: .25rem;
+  text-align: center; }
+.lut-fit { font-size: .8rem; margin: .7rem 0 0; }
+.lut-foot { display: flex; align-items: center; justify-content: space-between;
+  gap: .75rem; flex-wrap: wrap; margin-top: auto; padding-top: 1rem; }
+.lut-size { font-family: var(--font-mono); font-size: .78rem; }

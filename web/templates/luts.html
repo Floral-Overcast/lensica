@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Lensica · LUTs{% endblock %}
+{% block content %}
+<h1>LUT library</h1>
+<p class="note">Downloadable 3D LUTs (.cube), each one explicitly licensed. The seed set
+  is exported from our own measured rig looks, so a LUT does on your footage what the
+  <a href="/try">Try a look</a> preview does in the browser. Measured LUTs carry the rig
+  they came from and a fit-error note.</p>
+
+{% if not luts %}
+<div class="card"><p class="note">No LUTs published yet. Run
+  <code>python3 tools/lut_ingest.py --seed</code> on the pipeline host to export the
+  measured looks into <code>/srv/lensica/luts/</code>.</p></div>
+{% else %}
+<div class="grid cols-2">
+  {% for l in luts %}
+  <div class="card lut-card">
+    <div class="lut-head">
+      <div class="lut-name">{{ l.name }}</div>
+      <div class="kv">
+        {% if l.provenance == 'measured' %}<span class="badge ok">measured</span>
+        {% else %}<span class="badge">community</span>{% endif %}
+        {% if l.license_url %}<a class="badge" href="{{ l.license_url }}" target="_blank" rel="noopener">{{ l.license }}</a>
+        {% else %}<span class="badge">{{ l.license }}</span>{% endif %}
+      </div>
+    </div>
+    {% if l.rig %}<div class="lut-rig">{{ l.rig }}</div>{% endif %}
+    {% if l.description %}<p class="note" style="margin:.5rem 0 0">{{ l.description }}</p>{% endif %}
+
+    {% if l.preview %}
+    <div class="lut-strip">
+      <figure><img src="/luts/preview/{{ l.preview.before.split('/')|last }}" alt="source" loading="lazy"><figcaption>source</figcaption></figure>
+      <figure><img src="/luts/preview/{{ l.preview.after.split('/')|last }}" alt="{{ l.name }}" loading="lazy"><figcaption>applied</figcaption></figure>
+    </div>
+    {% endif %}
+
+    {% if l.fit_error %}<p class="note lut-fit">{{ l.fit_error }}</p>{% endif %}
+    <div class="lut-foot">
+      <a class="btn primary" href="/luts/download/{{ l.id }}" download>Download .cube</a>
+      <span class="dim lut-size">{{ l.size }}&sup3; · {{ l.license }}</span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
