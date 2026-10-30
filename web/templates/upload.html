@@ -28,6 +28,7 @@
   <span id="status" class="dim" style="margin-left:12px"></span>
 </div>
 
+<ul id="framelist" style="list-style:none;padding:0;margin:16px 0 0;display:flex;flex-wrap:wrap;gap:8px"></ul>
 <ul class="verdicts" id="verdicts"></ul>
 <div id="summary" style="margin-top:18px"></div>
 {% endblock %}
@@ -73,20 +74,50 @@ function row(v){
 }
 
 var summary=document.getElementById('summary');
+var framelist=document.getElementById('framelist');
 var results=[];
+// The eight frames a complete session needs, in shot-list order.
+var FRAMES=['tone','flat','split','organic','spectrum','skin','edges','points'];
+var frameState={};  // frame -> 'pass' | 'reshoot'
+
+function initFrames(){
+  frameState={};framelist.innerHTML='';
+  FRAMES.forEach(function(f){
+    var li=document.createElement('li');li.id='fr-'+f;
+    li.style.cssText='padding:4px 10px;border:1px solid var(--line);border-radius:999px;'+
+      'font-size:.88rem;color:var(--dim)';
+    li.innerHTML='<b style="margin-right:6px">·</b>'+f;
+    framelist.appendChild(li);
+  });
+}
+function markFrame(v){
+  if(FRAMES.indexOf(v.frame)<0)return;  // unidentified / rejected: not a frame
+  if(v.ok)frameState[v.frame]='pass';
+  else if(frameState[v.frame]!=='pass')frameState[v.frame]='reshoot';
+  var li=document.getElementById('fr-'+v.frame);if(!li)return;
+  var st=frameState[v.frame],pass=st==='pass';
+  li.style.color='var(--text)';
+  li.style.borderColor=pass?'var(--ok,#199e70)':'var(--bad,#d95926)';
+  li.querySelector('b').textContent=pass?'✓':'↻';
+}
 
 function renderSummary(){
   var pass=0;
   results.forEach(function(v){if(v.ok)pass++;});
   var total=results.length;
+  var missing=FRAMES.filter(function(f){return !frameState[f];});
+  var reshoot=FRAMES.filter(function(f){return frameState[f]==='reshoot';});
   var line=pass+' of '+total+' shot'+(total===1?'':'s')+' passed.';
+  if(missing.length)line+=' Missing: '+missing.join(', ')+'.';
+  if(reshoot.length)line+=' Reshoot: '+reshoot.join(', ')+'.';
+  if(!missing.length&&!reshoot.length)line+=' All eight frames captured.';
   summary.innerHTML='<p class="note" style="margin-bottom:12px">'+line+'</p>'+
     '<a class="btn primary" href="/library">See the library &rarr;</a>';
 }
 
 go.addEventListener('click',function(){
   if(!files.length||!size.value)return;
-  go.disabled=true;verdicts.innerHTML='';summary.innerHTML='';results=[];
+  go.disabled=true;verdicts.innerHTML='';summary.innerHTML='';results=[];initFrames();
   status.innerHTML='<span class="spin" style="display:inline-block;vertical-align:middle"></span> uploading…';
   var fd=new FormData();
   files.forEach(function(f){fd.append('files',f);});
@@ -100,7 +131,7 @@ go.addEventListener('click',function(){
     es.onmessage=function(ev){
       var v=JSON.parse(ev.data);
       if(v.done){es.close();status.textContent='done';go.disabled=false;renderSummary();return;}
-      results.push(v);row(v);
+      results.push(v);markFrame(v);row(v);
     };
     es.onerror=function(){es.close();status.textContent='stream ended';go.disabled=false;};
   }).catch(function(e){status.textContent='error: '+e;go.disabled=false;});
