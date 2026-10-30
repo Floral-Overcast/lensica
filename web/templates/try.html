@@ -95,13 +95,32 @@
 
   // slider
   var ba=document.getElementById('ba');
+  var handle=document.getElementById('baHandle');
+  function setPct(pct){
+    pct=Math.max(0,Math.min(100,pct));
+    ba.style.setProperty('--split',pct+'%');
+    handle.setAttribute('aria-valuenow',Math.round(pct));}
   function setSplit(x){var r=ba.getBoundingClientRect();
-    var pct=Math.max(0,Math.min(100,(x-r.left)/r.width*100));
-    ba.style.setProperty('--split',pct+'%');}
+    setPct((x-r.left)/r.width*100);}
   var drag=false;
   ba.addEventListener('pointerdown',function(e){drag=true;setSplit(e.clientX);ba.setPointerCapture(e.pointerId);});
   ba.addEventListener('pointermove',function(e){if(drag)setSplit(e.clientX);});
   ba.addEventListener('pointerup',function(){drag=false;});
+  // keyboard: the divider is a real focusable slider, arrows move the split
+  handle.setAttribute('tabindex','0');
+  handle.setAttribute('role','slider');
+  handle.setAttribute('aria-label','Compare your photo and look applied');
+  handle.setAttribute('aria-valuemin','0');
+  handle.setAttribute('aria-valuemax','100');
+  handle.addEventListener('keydown',function(e){
+    var cur=parseFloat(ba.style.getPropertyValue('--split'))||50;
+    var step=e.shiftKey?10:4;
+    if(e.key==='ArrowLeft'){setPct(cur-step);}
+    else if(e.key==='ArrowRight'){setPct(cur+step);}
+    else if(e.key==='Home'){setPct(0);}
+    else if(e.key==='End'){setPct(100);}
+    else{return;}
+    e.preventDefault();});
 })();
 </script>
 {% endblock %}
