@@ -86,8 +86,18 @@ def wizard(request: Request):
 
 
 @app.get("/upload", response_class=HTMLResponse)
-def upload_page(request: Request):
-    return page(request, "upload.html", sizes=ingestion.SIZES, default_size=ingestion.DEFAULT_SIZE)
+def upload_page(request: Request, session: str = ""):
+    # Preselect the stimulus resolution from the display the user already picked
+    # in the wizard (carried on the session), so they never re-enter raw pixels.
+    displays = sorted(viewer.cut.DISPLAYS.items())
+    sel = ""
+    folder = ingestion.session_folder(session) if session else None
+    if folder:
+        dkey = ingestion.read_manifest(folder).get("display")
+        if dkey in viewer.cut.DISPLAYS:
+            w, h = viewer.cut.DISPLAYS[dkey]
+            sel = f"{w}x{h}"
+    return page(request, "upload.html", displays=displays, sel=sel)
 
 
 @app.get("/library", response_class=HTMLResponse)
@@ -183,10 +193,30 @@ def viewer_cut(label: str, fname: str):
                     headers={"Cache-Control": "no-store" if is_json else "max-age=86400"})
 
 
+# ---------------- session (created up front from the wizard) ----------------
+@app.post("/api/session")
+async def api_session(session: str = "", body: str = "", lens: str = "",
+                      display: str = ""):
+    """Create or update a session with the gear + display the user entered in
+    step 1 of the wizard, independent of the (optional) rig photo. This is what
+    carries body/lens/display into the manifest and lets upload preselect the
+    stimulus resolution."""
+    folder = ingestion.session_folder(session) if session else None
+    if folder:
+        sid = session
+    else:
+        sid, folder = ingestion.new_session()
+    rig = " + ".join(x for x in (body.strip(), lens.strip()) if x)
+    ingestion.write_manifest(folder, name=rig or None,
+                             body=body.strip() or None, lens=lens.strip() or None,
+                             display=display.strip() or None)
+    return {"session": sid}
+
+
 # ---------------- device photo (rig snapshot) ----------------
 @app.post("/api/device-photo")
 async def api_device_photo(photo: UploadFile, session: str = "",
-                           body: str = "", lens: str = ""):
+                           body: str = "", lens: str = "", display: str = ""):
     folder = ingestion.session_folder(session) if session else None
     if folder:
         sid = session
@@ -198,8 +228,9 @@ async def api_device_photo(photo: UploadFile, session: str = "",
     if not ok:
         return JSONResponse({"error": reason}, status_code=400)
     rig = " + ".join(x for x in (body.strip(), lens.strip()) if x)
-    ingestion.write_manifest(folder, device_photo=stored, name=rig,
-                             body=body.strip() or None, lens=lens.strip() or None)
+    ingestion.write_manifest(folder, device_photo=stored, name=rig or None,
+                             body=body.strip() or None, lens=lens.strip() or None,
+                             display=display.strip() or None)
     return {"session": sid, "stored": stored}
 
 

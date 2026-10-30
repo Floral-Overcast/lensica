@@ -176,16 +176,38 @@ var SHOTS=[
       document.getElementById('rig').textContent='· '+b+' + '+l;
     }
   }
-  document.getElementById('next').onclick=function(){if(step<panels.length-1){step++;render();}};
+  // ---- session: created as soon as gear + display are entered (step 0),
+  // independent of the optional rig photo, so body/lens/display always reach
+  // the manifest and the upload page can preselect the stimulus resolution.
+  var session='';
+  function syncUpload(){
+    document.getElementById('uploadlink').href=
+      session?('/upload?session='+session):'/upload';
+  }
+  function ensureSession(cb){
+    var body=document.getElementById('body').value.trim();
+    var lens=document.getElementById('lens').value.trim();
+    var display=document.getElementById('display').value||'';
+    var q='?body='+encodeURIComponent(body)+'&lens='+encodeURIComponent(lens)+
+          '&display='+encodeURIComponent(display)+(session?('&session='+session):'');
+    fetch('/api/session'+q,{method:'POST'}).then(function(r){return r.json();})
+      .then(function(res){if(res.session){session=res.session;syncUpload();}if(cb)cb();})
+      .catch(function(){if(cb)cb();});
+  }
+
+  document.getElementById('next').onclick=function(){
+    if(step===0){ensureSession();}
+    if(step<panels.length-1){step++;render();}};
   document.getElementById('prev').onclick=function(){if(step>0){step--;render();}};
-  pills.forEach(function(p){p.onclick=function(){step=+p.dataset.step;render();};});
+  pills.forEach(function(p){p.onclick=function(){
+    if(step===0&&+p.dataset.step>0){ensureSession();}
+    step=+p.dataset.step;render();};});
   render();
 
   // ---- rig photo step ----
   var devdrop=document.getElementById('devdrop'),devfile=document.getElementById('devfile');
   var devsave=document.getElementById('devsave'),devstatus=document.getElementById('devstatus');
-  var devpreview=document.getElementById('devpreview'),uploadlink=document.getElementById('uploadlink');
-  var devSession='';
+  var devpreview=document.getElementById('devpreview');
   function pickDev(f){
     if(!f){return;}
     devsave.disabled=false;devstatus.textContent='';
@@ -208,13 +230,14 @@ var SHOTS=[
     var fd=new FormData();fd.append('photo',devsave._file);
     var q='?body='+encodeURIComponent(document.getElementById('body').value||'')+
           '&lens='+encodeURIComponent(document.getElementById('lens').value||'')+
-          (devSession?('&session='+devSession):'');
+          '&display='+encodeURIComponent(document.getElementById('display').value||'')+
+          (session?('&session='+session):'');
     fetch('/api/device-photo'+q,{method:'POST',body:fd})
       .then(function(r){return r.json();}).then(function(res){
         if(res.error){devstatus.textContent=res.error;devsave.disabled=false;return;}
-        devSession=res.session;
+        session=res.session;
         devstatus.textContent='saved, it will show on the entry';
-        uploadlink.href='/upload?session='+devSession;
+        syncUpload();
       }).catch(function(e){devstatus.textContent='error: '+e;devsave.disabled=false;});
   });
 })();

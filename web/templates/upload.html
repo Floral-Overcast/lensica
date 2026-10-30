@@ -8,10 +8,11 @@
   scored. Test-chart uploads are kept so future methodology improvements can re-process
   them. You get a per-shot verdict: frame identified, markers found, pass/fail, reshoot hint.</p>
 
-<div class="field" style="max-width:280px">
-  <label>Stimulus resolution (the display you shot)</label>
+<div class="field" style="max-width:340px">
+  <label>The display you shot</label>
   <select id="size">
-    {% for s in sizes %}<option value="{{ s }}" {{ 'selected' if s==default_size else '' }}>{{ s }}</option>{% endfor %}
+    <option value="" {{ '' if sel else 'selected' }} disabled>Select your display</option>
+    {% for key, wh in displays %}<option value="{{ wh[0] }}x{{ wh[1] }}" {{ 'selected' if (wh[0]|string + 'x' + wh[1]|string)==sel else '' }}>{{ key }} · {{ wh[0] }}×{{ wh[1] }}</option>{% endfor %}
   </select>
 </div>
 
@@ -39,13 +40,19 @@ var SESSION=new URLSearchParams(location.search).get('session')||'';
 var drop=document.getElementById('drop'),input=document.getElementById('file');
 var go=document.getElementById('go'),picked=document.getElementById('picked');
 var verdicts=document.getElementById('verdicts'),status=document.getElementById('status');
+var size=document.getElementById('size');
 if(SESSION){picked.textContent='Rig photo attached, these files join that session.';}
 
+function refreshGo(){go.disabled=!files.length||!size.value;}
 function setFiles(list){
   files=Array.prototype.slice.call(list);
   picked.textContent=files.length?(files.length+' file'+(files.length>1?'s':'')+' selected'):'';
-  go.disabled=!files.length;
+  refreshGo();
 }
+size.addEventListener('change',function(){
+  refreshGo();
+  status.textContent=size.value?'':'pick the display you shot first';
+});
 drop.addEventListener('click',function(){input.click();});
 input.addEventListener('change',function(){setFiles(input.files);});
 ['dragenter','dragover'].forEach(function(e){drop.addEventListener(e,function(ev){
@@ -65,7 +72,7 @@ function row(v){
 }
 
 go.addEventListener('click',function(){
-  if(!files.length)return;
+  if(!files.length||!size.value)return;
   go.disabled=true;verdicts.innerHTML='';
   status.innerHTML='<span class="spin" style="display:inline-block;vertical-align:middle"></span> uploading…';
   var fd=new FormData();
@@ -76,8 +83,7 @@ go.addEventListener('click',function(){
       row({ok:false,frame:'rejected',markers:0,name:rj.name,hint:rj.reason});});
     if(!res.accepted||!res.accepted.length){status.textContent='no valid files accepted';go.disabled=false;return;}
     status.innerHTML='<span class="spin" style="display:inline-block;vertical-align:middle"></span> analyzing '+res.accepted.length+' file(s)…';
-    var size=document.getElementById('size').value;
-    var es=new EventSource('/api/ingest/'+res.session+'?size='+encodeURIComponent(size));
+    var es=new EventSource('/api/ingest/'+res.session+'?size='+encodeURIComponent(size.value));
     es.onmessage=function(ev){
       var v=JSON.parse(ev.data);
       if(v.done){es.close();status.textContent='done';go.disabled=false;return;}
