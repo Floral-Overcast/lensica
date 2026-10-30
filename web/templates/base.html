@@ -21,8 +21,8 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
     <a class="navlink {{ 'active' if path == href else '' }}" href="{{ href }}">{{ label }}</a>
   {% endfor %}
   <span class="spacer"></span>
-  <button class="theme-toggle" id="themeBtn" type="button" aria-label="Toggle theme">
-    <span id="themeIcon">&#9789;</span> <span id="themeLabel">Dark</span>
+  <button class="theme-toggle" id="themeBtn" type="button" aria-label="Switch to light mode">
+    <span id="themeIcon">&#9728;</span> <span id="themeLabel">Light</span>
   </button>
 </div></header>
 
@@ -41,8 +41,11 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
   var btn=document.getElementById('themeBtn');
   function paint(t){
     var dark=(t==='flora-glass');
-    document.getElementById('themeLabel').textContent=dark?'Dark':'Light';
-    document.getElementById('themeIcon').innerHTML=dark?'☾':'☀';
+    // Label the action (the mode this switches to), not the current state, so
+    // the button reads as a command rather than a status.
+    document.getElementById('themeLabel').textContent=dark?'Light':'Dark';
+    document.getElementById('themeIcon').innerHTML=dark?'☀':'☾';
+    btn.setAttribute('aria-label',dark?'Switch to light mode':'Switch to dark mode');
   }
   paint(document.documentElement.getAttribute('data-theme'));
   btn.addEventListener('click',function(){
