@@ -29,6 +29,7 @@
 </div>
 
 <ul class="verdicts" id="verdicts"></ul>
+<div id="summary" style="margin-top:18px"></div>
 {% endblock %}
 
 {% block scripts %}
@@ -71,9 +72,21 @@ function row(v){
   verdicts.appendChild(li);
 }
 
+var summary=document.getElementById('summary');
+var results=[];
+
+function renderSummary(){
+  var pass=0;
+  results.forEach(function(v){if(v.ok)pass++;});
+  var total=results.length;
+  var line=pass+' of '+total+' shot'+(total===1?'':'s')+' passed.';
+  summary.innerHTML='<p class="note" style="margin-bottom:12px">'+line+'</p>'+
+    '<a class="btn primary" href="/library">See the library &rarr;</a>';
+}
+
 go.addEventListener('click',function(){
   if(!files.length||!size.value)return;
-  go.disabled=true;verdicts.innerHTML='';
+  go.disabled=true;verdicts.innerHTML='';summary.innerHTML='';results=[];
   status.innerHTML='<span class="spin" style="display:inline-block;vertical-align:middle"></span> uploading…';
   var fd=new FormData();
   files.forEach(function(f){fd.append('files',f);});
@@ -86,8 +99,8 @@ go.addEventListener('click',function(){
     var es=new EventSource('/api/ingest/'+res.session+'?size='+encodeURIComponent(size.value));
     es.onmessage=function(ev){
       var v=JSON.parse(ev.data);
-      if(v.done){es.close();status.textContent='done';go.disabled=false;return;}
-      row(v);
+      if(v.done){es.close();status.textContent='done';go.disabled=false;renderSummary();return;}
+      results.push(v);row(v);
     };
     es.onerror=function(){es.close();status.textContent='stream ended';go.disabled=false;};
   }).catch(function(e){status.textContent='error: '+e;go.disabled=false;});
